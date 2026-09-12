@@ -198,6 +198,7 @@ export const ReplayOutcome = z.enum([
 | POST | `/fix` | `{ incident, analysis }` | `{ ok: true, proposalId, path, diff, changedLines, explanation }` or `{ ok: false, reason }` (422) — **live** |
 | POST | `/fix/apply` | `{ proposalId }` | `{ ok: true, path }` or `{ ok: false, reason }` (409). Writes the file; demo app restarts itself via `--watch` |
 | POST | `/fix/revert` | `{ proposalId }` | `{ ok: true, path }` |
+| POST | `/fix/pr` | `{ proposalId, before: ReplayOutcome, after: ReplayOutcome, issueUrl? }` | `{ ok: true, url, number, branch }` or `{ ok: false, reason }` (422). **Refuses unless before is `reproduced` and after is `not_reproduced`.** Opens a PR on the demo mirror; never merges |
 
 Replay and verify run entirely in the extension. `verify(target, observed)`
 compares `endpoint` + `status` (+ normalized `runtimeError.message` if both
@@ -306,6 +307,9 @@ Otherwise it is the "what's next" line in the video and nothing more.
    (`apps/demo` runs under `node --watch`, so a file write is enough).
 5. Panel re-runs the same replay. `not_reproduced` = **fix verified**.
    Anything else = **fix rejected**, and the panel calls `POST /fix/revert`.
+6. On verified: panel calls `POST /fix/pr` with both replay outcomes. A PR
+   opens on the demo mirror with the diff and the before/after evidence.
+   A human merges. Then `POST /notify` with `fix: { status: "verified", prUrl }`.
 
 **Guardrails (these are the criterion 3 points):**
 
