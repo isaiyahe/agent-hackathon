@@ -4,6 +4,8 @@ import fixture from "../../packages/core/fixtures/incident.json";
 
 const analysis = {
   title: "Guest checkout returns 500",
+  severity: "high",
+  impact: "Guests cannot complete checkout; revenue is blocked.",
   observed: ["POST /api/checkout returned 500", "TypeError on null customer"],
   reproductionSteps: ["Open /checkout", "Add demo item", "Continue as guest", "Click Checkout"],
   hypothesis: "Guest sessions never populate state.customer, so createOrder dereferences null.",
@@ -24,6 +26,7 @@ describe("buildIssueMarkdown", () => {
     expect(body).toContain("4. Click Checkout");
     expect(body).toContain("Reproduced by replay");
     expect(body).toContain("confidence: high");
+    expect(body).toContain("🟠 High");
     expect(body).toContain("Cannot read properties of null");
   });
 
@@ -58,6 +61,7 @@ describe("createIssue", () => {
     expect(seen.owner).toBe("acme");
     expect(seen.repo).toBe("target");
     expect(seen.labels).toContain("replay:reproduced");
+    expect(seen.labels).toContain("severity:high");
   });
 
   it("returns ok:false with markdown when GitHub fails", async () => {

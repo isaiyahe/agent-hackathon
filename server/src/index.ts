@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { analyzeIncident } from "./analyze.ts";
 import { createIssue } from "./github.ts";
 import { applyFix, proposeFix, revertFix } from "./fix.ts";
+import { notify } from "./notify.ts";
 
 const app = new Hono();
 app.use("*", cors());
@@ -62,6 +63,18 @@ app.post("/fix/revert", async (c) => {
   if (!body.proposalId) return c.json({ ok: false, reason: "proposalId required" }, 400);
   const res = await revertFix(body.proposalId);
   return c.json(res, res.ok ? 200 : 409);
+});
+
+app.post("/notify", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  try {
+    return c.json(await notify(body));
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return c.json({ ok: false, reason: "invalid notify request", issues: (err as any).issues }, 400);
+    }
+    throw err;
+  }
 });
 
 const port = Number(process.env.PORT ?? 8787);

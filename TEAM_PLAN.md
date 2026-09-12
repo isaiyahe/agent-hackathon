@@ -171,6 +171,8 @@ export const Incident = z.object({
 
 export const IncidentAnalysis = z.object({
   title: z.string().max(100),
+  severity: z.enum(["critical", "high", "medium", "low"]),   // added 1:50, additive
+  impact: z.string().max(200),                               // one-sentence business impact
   observed: z.array(z.string()).max(6),
   reproductionSteps: z.array(z.string()).min(1).max(8),
   hypothesis: z.string().max(320),
@@ -191,6 +193,7 @@ export const ReplayOutcome = z.enum([
 | POST | `/analyze` | `Incident` | `{ analysis: IncidentAnalysis, source: "model" \| "fallback" }` — **live, ~5s with model** |
 | POST | `/issue` | `{ incident, analysis, replay: { outcome, observed? } }` | `{ ok: true, url, number, markdown }` or `{ ok: false, reason, markdown }` (HTTP 502) |
 | GET | `/health` | | `{ ok: true }` |
+| POST | `/notify` | `{ incident, analysis, replay: { outcome }, issueUrl?, fix?: { status: "verified" \| "rejected" \| "proposed" \| "not_attempted", prUrl? } }` | `{ ok, configured, sent: string[], failed: [...], message }`. `configured:false` when no Slack/Telegram env is set; panel shows the message anyway |
 
 | POST | `/fix` | `{ incident, analysis }` | `{ ok: true, proposalId, path, diff, changedLines, explanation }` or `{ ok: false, reason }` (422) — **live** |
 | POST | `/fix/apply` | `{ proposalId }` | `{ ok: true, path }` or `{ ok: false, reason }` (409). Writes the file; demo app restarts itself via `--watch` |

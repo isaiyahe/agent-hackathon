@@ -5,6 +5,8 @@ import { Incident } from "../../packages/core/schemas.ts";
 
 const good = {
   title: "Guest checkout 500",
+  severity: "high",
+  impact: "Guests cannot complete checkout; revenue is blocked.",
   observed: ["POST /api/checkout returned 500"],
   reproductionSteps: ["Open /checkout", "Click Checkout"],
   hypothesis: "customer is null for guest sessions",
@@ -21,6 +23,7 @@ describe("fallbackAnalysis", () => {
     expect(a.reproductionSteps).toEqual(fixture.actions.map((x) => x.label));
     expect(a.observed.join("\n")).toContain("Cannot read properties of null");
     expect(a.confidence).toBe("low");
+    expect(a.severity).toBe("high"); // checkout endpoint
   });
 });
 

@@ -7,6 +7,8 @@ import fixture from "../../packages/core/fixtures/incident.json";
 
 const analysis = {
   title: "Guest checkout returns 500",
+  severity: "high",
+  impact: "Guests cannot complete checkout; revenue is blocked.",
   observed: ["POST /api/checkout returned 500"],
   reproductionSteps: ["Open /checkout", "Click Checkout"],
   hypothesis: "customer is null for guest sessions",

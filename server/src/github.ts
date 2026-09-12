@@ -4,6 +4,13 @@ import { sanitizeIncident } from "../../packages/core/sanitize.ts";
 
 export const GITHUB_TIMEOUT_MS = 10_000;
 
+const SEVERITY_LABEL: Record<IssueRequest["analysis"]["severity"], string> = {
+  critical: "🔴 Critical",
+  high: "🟠 High",
+  medium: "🟡 Medium",
+  low: "🟢 Low",
+};
+
 const OUTCOME_LABEL: Record<IssueRequest["replay"]["outcome"], string> = {
   reproduced: "✅ Reproduced by replay",
   not_reproduced: "⚪ Not reproduced by replay",
@@ -19,6 +26,7 @@ export function buildIssueMarkdown(req: IssueRequest): { title: string; body: st
 
   lines.push(`> Witnessed by REPRO in Chrome DevTools at ${incident.capturedAt}.`);
   lines.push(`> **Verification:** ${OUTCOME_LABEL[replay.outcome]}`);
+  lines.push(`> **Severity:** ${SEVERITY_LABEL[analysis.severity]} — ${analysis.impact}`);
   lines.push("");
   lines.push("## Failure signature");
   lines.push("");
@@ -142,7 +150,7 @@ export async function createIssue(input: unknown, opts: IssueOptions = {}): Prom
       repo,
       title,
       body,
-      labels: ["bug", "repro", `replay:${req.replay.outcome}`],
+      labels: ["bug", "repro", `replay:${req.replay.outcome}`, `severity:${req.analysis.severity}`],
       signal: ac.signal,
     });
     return { ok: true, url, number, markdown };

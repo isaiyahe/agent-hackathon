@@ -33,8 +33,13 @@ export const Incident = z.object({
 });
 export type Incident = z.infer<typeof Incident>;
 
+export const Severity = z.enum(["critical", "high", "medium", "low"]);
+export type Severity = z.infer<typeof Severity>;
+
 export const IncidentAnalysis = z.object({
   title: z.string().max(100),
+  severity: Severity,
+  impact: z.string().max(200),
   observed: z.array(z.string()).max(6),
   reproductionSteps: z.array(z.string()).min(1).max(8),
   hypothesis: z.string().max(320),

@@ -20,6 +20,12 @@ Your job:
 - Give ONE bounded root-cause hypothesis and rate your confidence.
 - List evidence gaps: things you would need to see to be sure.
 - Add safety warnings only if the incident suggests data loss, auth, or payment impact.
+- Rate severity with this rubric and state the business impact in one sentence:
+  critical = security (injection, auth bypass, data exposure, leaked secrets);
+  high     = a revenue or onboarding flow is blocked (checkout, payment, signup,
+             login) or data is lost;
+  medium   = a feature is broken but there is a workaround or only some users hit it;
+  low      = cosmetic, copy, or styling.
 
 You never decide whether the bug reproduced. Never claim it was verified.`;
 
@@ -60,6 +66,8 @@ export function fallbackAnalysis(incident: Incident): IncidentAnalysis {
 
   return IncidentAnalysis.parse({
     title: `${fr.method} ${fr.endpoint} returns ${fr.status}`.slice(0, 100),
+    severity: fallbackSeverity(fr.endpoint, fr.status),
+    impact: "Model analysis unavailable; severity estimated from endpoint and status only.",
     observed: observed.slice(0, 6),
     reproductionSteps: steps,
     hypothesis:
@@ -68,6 +76,13 @@ export function fallbackAnalysis(incident: Incident): IncidentAnalysis {
     evidenceGaps: ["AI analysis did not complete; hypothesis not generated"],
     safetyWarnings: [],
   });
+}
+
+/** Deterministic guess when the model is unavailable. Revenue paths are high; server errors medium; the rest low. */
+export function fallbackSeverity(endpoint: string, status: number): IncidentAnalysis["severity"] {
+  if (/checkout|payment|pay|order|cart|signup|register|login|auth/i.test(endpoint)) return "high";
+  if (status >= 500) return "medium";
+  return "low";
 }
 
 async function runWithTimeout(
