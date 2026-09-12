@@ -40,6 +40,7 @@ let cachedAgent: Agent<unknown, typeof IncidentAnalysis> | undefined;
 export const openaiRunner: ModelRunner = async (incident, signal) => {
   cachedAgent ??= new Agent({
     name: "REPRO incident analyst",
+    modelSettings: { temperature: 0 },
     model: process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
     instructions: INSTRUCTIONS,
     outputType: IncidentAnalysis,

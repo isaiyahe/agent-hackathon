@@ -84,6 +84,10 @@
       if (lastError && Date.now() - lastError.at < 3000) {
         incident.runtimeError = { message: lastError.message, stack: lastError.stack };
       }
+      // Start a fresh trail after each report so the next incident only carries its own steps.
+      actions.length = 0;
+      push({ t: 0, kind: "navigate", locator: location.pathname, label: "Open " + location.pathname });
+      start = Date.now();
       try {
         origFetch(ENDPOINT, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(incident), keepalive: true })
           .then(function (r) { if (window.REPRO_DEBUG) console.log("[repro] sent", incident.id, r.status); })

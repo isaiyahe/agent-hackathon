@@ -99,14 +99,33 @@
     }).catch(function (e) { log(id, "Fix error: " + e.message); }).finally(function () { state.busy = false; render(); });
   }
 
+  function demoBootedAt() { return fetch(DEMO + "/api/state").then(function (r) { return r.json(); }).then(function (j) { return j.bootedAt || null; }).catch(function () { return null; }); }
+  // Poll until the demo app reports a new boot time (node --watch restarted it), max 10s.
+  function waitForRestart(prev) {
+    var deadline = Date.now() + 10000;
+    return new Promise(function (resolve) {
+      (function tick() {
+        demoBootedAt().then(function (now) {
+          if (now && now !== prev) return resolve(true);
+          if (Date.now() > deadline) return resolve(false);
+          setTimeout(tick, 250);
+        });
+      })();
+    });
+  }
+
   function applyAndVerify(row) {
     var id = row.incident.id, u = ui(id);
     state.busy = true; log(id, "Applying fix (demo app restarts)…");
     u.before = u.replay;
-    return api("/fix/apply", { proposalId: u.fix.proposalId }).then(function (j) {
+    var prevBoot;
+    return demoBootedAt().then(function (b) { prevBoot = b; return api("/fix/apply", { proposalId: u.fix.proposalId }); }).then(function (j) {
       if (!j.ok) { log(id, "Apply refused: " + j.reason); return; }
-      u.fix.applied = true; log(id, "Applied. Waiting for restart, then replaying the same actions…");
-      return sleep(2500).then(function () { return replay(row); }).then(function (outcome) {
+      u.fix.applied = true; log(id, "Applied. Waiting for the app to restart…");
+      return waitForRestart(prevBoot).then(function (restarted) {
+        log(id, restarted ? "App restarted with the fix. Replaying the same actions…" : "Restart not observed within 10s; replaying anyway…");
+        return sleep(400);
+      }).then(function () { return replay(row); }).then(function (outcome) {
         u.after = outcome;
         if (outcome === "not_reproduced") { u.fixVerified = true; log(id, "FIX VERIFIED by replay. Bug no longer reproduces."); }
         else { u.fixVerified = false; log(id, "Fix rejected (" + outcome + "). Reverting…"); return api("/fix/revert", { proposalId: u.fix.proposalId }).then(function () { u.fix.applied = false; log(id, "Reverted."); }); }

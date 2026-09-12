@@ -57,6 +57,7 @@ export type FixRunner = (prompt: string, signal: AbortSignal) => Promise<unknown
 export const openaiFixRunner: FixRunner = async (prompt, signal) => {
   cachedAgent ??= new Agent({
     name: "REPRO implementer",
+    modelSettings: { temperature: 0 },
     model: process.env.OPENAI_FIX_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4.1-mini",
     instructions: INSTRUCTIONS,
     outputType: FixProposalOutput,

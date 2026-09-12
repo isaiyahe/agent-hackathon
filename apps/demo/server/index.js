@@ -13,7 +13,8 @@ function freshState() {
   return { cart: [], customer: null, orders: [] };
 }
 
-app.get("/api/state", (_req, res) => res.json(state));
+const bootedAt = new Date().toISOString();
+app.get("/api/state", (_req, res) => res.json({ ...state, bootedAt }));
 
 app.post("/api/reset", (_req, res) => {
   state = freshState();

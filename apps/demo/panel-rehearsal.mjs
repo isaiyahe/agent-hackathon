@@ -64,7 +64,7 @@ step("fix proposed, diff shown");
 await panel.click("#b-apply");
 await panel.waitForFunction(() => /fix verified|fix rejected/.test(document.body.textContent), null, { timeout: 40000 });
 const fixState = (await panel.textContent("body")).includes("fix verified by replay") ? "verified" : "rejected";
-if (fixState !== "verified") fail("fix was rejected:\n" + (await panel.textContent("#detail .card:last-of-type pre")));
+if (fixState !== "verified") fail("fix was rejected:\n" + (await panel.textContent("#detail .card:last-of-type pre")) + "\n--- diff ---\n" + (await panel.textContent("#detail pre.diff").catch(() => "(no diff)")));
 step("fix applied and verified by replay");
 
 // 7. PR

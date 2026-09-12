@@ -69,6 +69,12 @@ cd server && npm run dev           # http://localhost:8787  (--watch reloads cod
 cd apps/demo && npm run smoke      # real Chromium through the bug → asserts intake
 ```
 
+**Never `git checkout` the demo server file to restore the bug.** That replaces
+the inode and `node --watch` silently stops restarting, so later fixes are
+"rejected" by replay even when correct. Restore it by writing in place
+(`git show HEAD:apps/demo/server/index.js > apps/demo/server/index.js`) or use
+`POST /fix/revert`. If in doubt, restart the demo app.
+
 Restart the server after editing `.env`. Kill stale servers with
 `pgrep -f 'strip-types src/index.t[s]' | xargs -r kill` (a plain `pkill -f`
 matches its own shell and dies first).
