@@ -192,9 +192,9 @@ export const ReplayOutcome = z.enum([
 | POST | `/issue` | `{ incident, analysis, replay: { outcome, observed? } }` | `{ ok: true, url, number, markdown }` or `{ ok: false, reason, markdown }` (HTTP 502) |
 | GET | `/health` | | `{ ok: true }` |
 
-| POST | `/fix` | `{ incident, analysis }` | `{ ok: true, diff, files: string[], explanation }` or `{ ok: false, reason }` |
-| POST | `/fix/apply` | `{ diff }` | `{ ok: true }` (applies, restarts demo app) |
-| POST | `/fix/revert` | | `{ ok: true }` |
+| POST | `/fix` | `{ incident, analysis }` | `{ ok: true, proposalId, path, diff, changedLines, explanation }` or `{ ok: false, reason }` (422) — **live** |
+| POST | `/fix/apply` | `{ proposalId }` | `{ ok: true, path }` or `{ ok: false, reason }` (409). Writes the file; demo app restarts itself via `--watch` |
+| POST | `/fix/revert` | `{ proposalId }` | `{ ok: true, path }` |
 
 Replay and verify run entirely in the extension. `verify(target, observed)`
 compares `endpoint` + `status` (+ normalized `runtimeError.message` if both

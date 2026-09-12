@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { analyzeIncident } from "./analyze.ts";
 import { createIssue } from "./github.ts";
+import { applyFix, proposeFix, revertFix } from "./fix.ts";
 
 const app = new Hono();
 app.use("*", cors());
@@ -33,6 +34,34 @@ app.post("/issue", async (c) => {
     }
     throw err;
   }
+});
+
+// ---- Stage 5: Fix (gated in the UI; server side is always available) ----
+app.post("/fix", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  try {
+    const res = await proposeFix(body);
+    return c.json(res, res.ok ? 200 : 422);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return c.json({ ok: false, reason: "invalid fix request", issues: (err as any).issues }, 400);
+    }
+    throw err;
+  }
+});
+
+app.post("/fix/apply", async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { proposalId?: string };
+  if (!body.proposalId) return c.json({ ok: false, reason: "proposalId required" }, 400);
+  const res = await applyFix(body.proposalId);
+  return c.json(res, res.ok ? 200 : 409);
+});
+
+app.post("/fix/revert", async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as { proposalId?: string };
+  if (!body.proposalId) return c.json({ ok: false, reason: "proposalId required" }, 400);
+  const res = await revertFix(body.proposalId);
+  return c.json(res, res.ok ? 200 : 409);
 });
 
 const port = Number(process.env.PORT ?? 8787);
