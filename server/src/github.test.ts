@@ -76,6 +76,20 @@ describe("createIssue", () => {
     }
   });
 
+  it("redacts a password value before it reaches the issue body", async () => {
+    const leaky = {
+      ...req,
+      incident: {
+        ...fixture,
+        actions: [...fixture.actions, { t: 9000, kind: "input", locator: "password", label: "Type password", value: "hunter2" }],
+      },
+    };
+    let body = "";
+    await createIssue(leaky, { ...quiet, repo: "acme/target", creator: async (a) => ((body = a.body), { url: "u", number: 1 }) });
+    expect(body).not.toContain("hunter2");
+    expect(body).toContain("[REDACTED]");
+  });
+
   it("returns ok:false with markdown when repo is not configured", async () => {
     const res = await createIssue(req, { ...quiet, repo: "" });
     expect(res.ok).toBe(false);

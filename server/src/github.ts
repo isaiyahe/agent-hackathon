@@ -1,5 +1,6 @@
 import { Octokit } from "octokit";
 import { IssueRequest } from "../../packages/core/schemas.ts";
+import { sanitizeIncident } from "../../packages/core/sanitize.ts";
 
 export const GITHUB_TIMEOUT_MS = 10_000;
 
@@ -119,7 +120,8 @@ export interface IssueOptions {
  * Throws only for an invalid request body.
  */
 export async function createIssue(input: unknown, opts: IssueOptions = {}): Promise<IssueResult> {
-  const req = IssueRequest.parse(input);
+  const parsed = IssueRequest.parse(input);
+  const req = { ...parsed, incident: sanitizeIncident(parsed.incident) };
   const { title, body } = buildIssueMarkdown(req);
   const markdown = `# ${title}\n\n${body}`;
   const log = opts.log ?? ((m) => console.warn(`[issue] ${m}`));

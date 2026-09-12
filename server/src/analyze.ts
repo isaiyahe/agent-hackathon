@@ -4,6 +4,7 @@ import {
   IncidentAnalysis,
   type AnalyzeResponse,
 } from "../../packages/core/schemas.ts";
+import { sanitizeIncident } from "../../packages/core/sanitize.ts";
 
 export const MODEL_TIMEOUT_MS = 15_000;
 
@@ -99,7 +100,8 @@ export async function analyzeIncident(
   input: unknown,
   opts: AnalyzeOptions = {},
 ): Promise<AnalyzeResponse> {
-  const incident = Incident.parse(input);
+  // Defense in depth: the extension sanitizes too, but nothing unredacted leaves this server.
+  const incident = sanitizeIncident(Incident.parse(input));
   const runner = opts.runner ?? openaiRunner;
   const timeoutMs = opts.timeoutMs ?? MODEL_TIMEOUT_MS;
   const log = opts.log ?? ((m) => console.warn(`[analyze] ${m}`));
