@@ -2,7 +2,7 @@ import { Octokit } from "octokit";
 import { IssueRequest } from "../../packages/core/schemas.ts";
 import { sanitizeIncident } from "../../packages/core/sanitize.ts";
 
-export const GITHUB_TIMEOUT_MS = 10_000;
+export const GITHUB_TIMEOUT_MS = 20_000;
 
 const SEVERITY_LABEL: Record<IssueRequest["analysis"]["severity"], string> = {
   critical: "🔴 Critical",
