@@ -1,10 +1,11 @@
-// The demo app does not implement this endpoint. In dev, Vite proxies /api/* to
-// DEMO_API_TARGET (see vite.config.ts); without it the request 404s.
-export const CHECKOUT_ENDPOINT = '/api/checkout';
+// The REPRO demo API (server/demo). Guest checkout deterministically returns 500
+// GUEST_USER_NULL. Its CORS allowlist only includes the Vite origin on port 5173,
+// which is why vite.config.ts sets strictPort.
+export const CHECKOUT_ENDPOINT = 'http://localhost:3001/api/checkout';
 
 export interface CheckoutRequest {
-  items: { sku: string; quantity: number }[];
-  checkoutMode: 'guest';
+  guest: boolean;
+  items: { id: string; quantity: number }[];
 }
 
 /**

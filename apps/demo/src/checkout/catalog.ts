@@ -1,5 +1,5 @@
 export const DEMO_ITEM = {
-  sku: 'repro-demo-item',
+  id: 'demo-item',
   name: 'REPRO Demo Item',
   description: 'Our best-selling demo item. Free standard shipping and 30-day returns.',
   priceCents: 4900,

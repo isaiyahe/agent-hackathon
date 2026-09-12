@@ -39,8 +39,8 @@ export function CheckoutPage() {
     let ok = false;
     try {
       ok = await submitCheckout({
-        items: [{ sku: DEMO_ITEM.sku, quantity: 1 }],
-        checkoutMode: 'guest',
+        guest: true,
+        items: [{ id: DEMO_ITEM.id, quantity: 1 }],
       });
     } finally {
       // No catch: unexpected errors still propagate to DevTools, while the
