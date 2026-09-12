@@ -42,6 +42,10 @@
     #log div { padding:2px 0; }
     .err { color:var(--bad); background:var(--bad-bg); margin:4px -11px -10px; padding:8px 11px; border-radius:0 0 7px 7px; }
     .foot { margin-top:26px; color:var(--muted); font-size:13px; }
+    .linkbtn { display:inline-block; padding:9px 14px; color:var(--muted); text-decoration:none; }
+    .linkbtn:hover { color:var(--ink); }
+    .line { display:flex; justify-content:space-between; gap:12px; font-size:14px; padding:2px 0; }
+    .line span:last-child { color:var(--muted); }
   </style>
 </head>
 <body>
@@ -49,7 +53,7 @@
   <script src="/repro.js" data-endpoint="http://localhost:8787/incidents"></script>
   <div class="wrap">
     <div class="top">
-      <div class="brand">Demo Shop <small>Checkout</small></div>
+      <div class="brand"><a href="/" style="color:inherit;text-decoration:none">Demo Shop</a> <small>Checkout</small></div>
       <div class="cart">Cart: <b><span data-testid="cart-count" id="cart-count">0</span></b> item(s)</div>
     </div>
 
@@ -60,13 +64,15 @@
             <svg width="56" height="56" viewBox="0 0 56 56" fill="none"><path d="M10 20h36l-3 26H13L10 20z" fill="#cfe0d3" stroke="#1f6f4a" stroke-width="2"/><path d="M20 20v-4a8 8 0 0116 0v4" stroke="#1f6f4a" stroke-width="2"/></svg>
           </div>
           <div>
-            <h2>Demo item</h2>
-            <p class="desc">One of these is all it takes to reach checkout.</p>
-            <div class="price">$19.00</div>
+            <h2>Your cart</h2>
+            <p class="desc" id="cart-empty">Nothing in it yet.</p>
+            <div id="cart-lines"></div>
+            <div class="price" id="cart-total"></div>
           </div>
         </div>
         <div class="actions">
           <button data-testid="add-item" id="add-item">Add demo item</button>
+          <a class="linkbtn" href="/">Keep shopping</a>
         </div>
       </div>
 
@@ -102,10 +108,20 @@
     const post = (url, body) =>
       fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body ?? {}) });
 
+    const renderCart = (cart) => {
+      const n = cart.reduce((a, i) => a + i.qty, 0);
+      document.getElementById("cart-count").textContent = n;
+      document.getElementById("cart-empty").style.display = n ? "none" : "";
+      document.getElementById("cart-lines").innerHTML = cart.map((i) => `<div class="line"><span>${i.qty} × ${i.name ?? i.sku}</span><span>$${(i.qty * i.price).toFixed(2)}</span></div>`).join("");
+      const total = cart.reduce((a, i) => a + i.qty * i.price, 0);
+      document.getElementById("cart-total").textContent = n ? `Total $${total.toFixed(2)}` : "";
+    };
+    fetch("/api/state").then((r) => r.json()).then((s) => renderCart(s.cart || [])).catch(() => {});
+
     document.getElementById("add-item").onclick = async () => {
       const r = await post("/api/cart", { sku: "demo-item" });
       const j = await r.json();
-      document.getElementById("cart-count").textContent = j.cart.length;
+      renderCart(j.cart);
       log("Added demo item");
     };
 
@@ -126,8 +142,8 @@
     };
 
     document.getElementById("reset").onclick = async () => {
-      await post("/api/reset");
-      document.getElementById("cart-count").textContent = "0";
+      await post("/api/reset?all=1");
+      renderCart([]);
       document.getElementById("log").innerHTML = "";
       log("Demo reset");
     };

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --paper:#f7f6f2; --card:#ffffff; --ink:#17201c; --muted:#6b7570; --line:#ddd9cf; --accent:#1f6f4a; }
+    * { box-sizing:border-box; }
+    html, body { margin:0; background:var(--paper); color:var(--ink); font:15px/1.5 "IBM Plex Sans", system-ui, sans-serif; }
+    .wrap { max-width:900px; margin:0 auto; padding:28px 20px 48px; }
+    .top { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:16px; border-bottom:1px solid var(--line); }
+    .brand { font-size:20px; font-weight:600; letter-spacing:-.01em; }
+    .cart { display:flex; align-items:center; gap:12px; color:var(--muted); }
+    .cart b { color:var(--ink); font-weight:600; }
+    a.primary { background:var(--accent); color:#fff; text-decoration:none; padding:9px 14px; border-radius:7px; font-weight:500; }
+    a.primary:hover { background:#1a5d3e; }
+    .hero { margin:26px 0 18px; }
+    .hero h1 { font-size:26px; font-weight:600; margin:0 0 4px; letter-spacing:-.01em; }
+    .hero p { margin:0; color:var(--muted); max-width:56ch; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; display:flex; flex-direction:column; gap:10px; }
+    .art { height:110px; border-radius:8px; display:grid; place-items:center; }
+    .card h2 { margin:0; font-size:16px; font-weight:600; }
+    .card p { margin:0; color:var(--muted); font-size:14px; flex:1; }
+    .row { display:flex; justify-content:space-between; align-items:center; }
+    .price { font-weight:600; }
+    button { font:inherit; font-weight:500; padding:8px 12px; border-radius:7px; border:1px solid var(--line); background:#fff; color:var(--ink); cursor:pointer; }
+    button:hover { border-color:#c9c4b8; }
+    button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    button.added { border-color:var(--accent); color:var(--accent); }
+    .foot { margin-top:26px; color:var(--muted); font-size:13px; }
+  </style>
+</head>
+<body>
+  <script src="/repro.js" data-endpoint="http://localhost:8787/incidents"></script>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">Demo Shop</div>
+      <div class="cart">Cart: <b><span data-testid="cart-count" id="cart-count">0</span></b> item(s) <a class="primary" data-testid="go-checkout" href="/checkout">Checkout</a></div>
+    </div>
+    <div class="hero">
+      <h1>Small things, shipped fast.</h1>
+      <p>Four products, one cart, and a checkout that works for signed-in customers. Guests are another story.</p>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="foot">This shop has one deliberate bug. REPRO is watching for it in DevTools.</p>
+  </div>
+  <script>
+    const post = (url, body) => fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body ?? {}) });
+    const icon = (sku) => ({
+      "demo-item": '<path d="M10 20h36l-3 26H13L10 20z" fill="#cfe0d3" stroke="#1f6f4a" stroke-width="2"/><path d="M20 20v-4a8 8 0 0116 0v4" stroke="#1f6f4a" stroke-width="2"/>',
+      "field-notebook": '<rect x="14" y="8" width="28" height="40" rx="3" fill="#f3e9dc" stroke="#8a6a44" stroke-width="2"/><path d="M20 18h16M20 26h16M20 34h10" stroke="#8a6a44" stroke-width="2"/>',
+      "enamel-mug": '<path d="M14 14h26v26a6 6 0 01-6 6H20a6 6 0 01-6-6V14z" fill="#e8f0f6" stroke="#2f5d80" stroke-width="2"/><path d="M40 20h4a5 5 0 010 10h-4" stroke="#2f5d80" stroke-width="2" fill="none"/>',
+      "wool-beanie": '<path d="M12 40c0-14 7-24 16-24s16 10 16 24H12z" fill="#f3dfe6" stroke="#8a3d5c" stroke-width="2"/><rect x="10" y="38" width="36" height="8" rx="3" fill="#8a3d5c"/>',
+    }[sku] || "");
+    const setCount = (cart) => (document.getElementById("cart-count").textContent = cart.reduce((a, i) => a + i.qty, 0));
+    Promise.all([fetch("/api/catalog").then((r) => r.json()), fetch("/api/state").then((r) => r.json())]).then(([catalog, state]) => {
+      setCount(state.cart || []);
+      document.getElementById("grid").innerHTML = catalog.map((p) => `
+        <div class="card">
+          <div class="art" style="background:${p.tint}"><svg width="56" height="56" viewBox="0 0 56 56" fill="none">${icon(p.sku)}</svg></div>
+          <h2>${p.name}</h2>
+          <p>${p.blurb}</p>
+          <div class="row"><span class="price">$${p.price.toFixed(2)}</span><button data-testid="add-to-cart-${p.sku}" data-sku="${p.sku}">Add to cart</button></div>
+        </div>`).join("");
+      document.querySelectorAll("button[data-sku]").forEach((b) => {
+        b.onclick = async () => {
+          const r = await post("/api/cart", { sku: b.dataset.sku });
+          const j = await r.json();
+          setCount(j.cart);
+          b.textContent = "Added"; b.classList.add("added");
+          setTimeout(() => { b.textContent = "Add to cart"; b.classList.remove("added"); }, 1200);
+        };
+      });
+    });
+  </script>
+</body>
+</html>

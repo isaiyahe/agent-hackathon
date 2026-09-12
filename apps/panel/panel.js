@@ -159,7 +159,7 @@
 
   function copy(text) { navigator.clipboard.writeText(text).catch(function () { var t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); }); }
 
-  document.getElementById("reset").onclick = function () { fetch(DEMO + "/api/reset", { method: "POST" }).then(function () { $server.textContent = "server: connected · demo reset"; }).catch(function () {}); };
+  document.getElementById("reset").onclick = function () { fetch(DEMO + "/api/reset?all=1", { method: "POST" }).then(function () { $server.textContent = "server: connected · demo reset"; }).catch(function () {}); };
 
   // ---------- console drawer ----------
   var $console = document.getElementById("console"), consoleOpen = false;
