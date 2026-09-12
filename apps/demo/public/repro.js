@@ -109,5 +109,10 @@
     return origOpen.apply(this, arguments);
   };
 
-  window.__repro = { actions: actions, endpoint: ENDPOINT };
+  window.__repro = {
+    actions: actions,
+    endpoint: ENDPOINT,
+    // Called by the REPRO panel before a replay so the dedupe window does not swallow the re-fired failure.
+    flush: function () { lastSent = {}; lastError = null; }
+  };
 })();

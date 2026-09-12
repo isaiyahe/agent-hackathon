@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>REPRO</title>
+<style>
+  :root { --bg:#1e1f22; --panel:#26282c; --line:#3a3d43; --fg:#e6e6e6; --dim:#9aa0a6; --acc:#7cc4ff; --ok:#5fd38d; --warn:#f6c343; --bad:#ff7b72; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:12px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; color:var(--fg); background:var(--bg); }
+  header { display:flex; align-items:center; gap:10px; padding:8px 12px; border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; }
+  header h1 { font-size:13px; margin:0; letter-spacing:.08em; }
+  header .tag { color:var(--dim); }
+  header .spacer { flex:1; }
+  main { display:grid; grid-template-columns: 260px 1fr; min-height:calc(100vh - 38px); }
+  aside { border-right:1px solid var(--line); overflow:auto; }
+  aside .item { padding:8px 10px; border-bottom:1px solid var(--line); cursor:pointer; }
+  aside .item:hover { background:#2c2f34; }
+  aside .item.sel { background:#30343a; border-left:3px solid var(--acc); }
+  aside .item .t { font-weight:600; }
+  aside .item .m { color:var(--dim); font-size:11px; }
+  section { padding:10px 12px; overflow:auto; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:10px; }
+  .card h2 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin:0 0 6px; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  button { background:#3b6ea5; color:#fff; border:0; border-radius:4px; padding:6px 10px; font:inherit; cursor:pointer; }
+  button.secondary { background:#3a3d43; }
+  button.good { background:#2f7d4f; }
+  button:disabled { opacity:.45; cursor:default; }
+  .badge { display:inline-block; padding:2px 7px; border-radius:10px; font-size:11px; font-weight:600; background:#3a3d43; }
+  .badge.ok { background:#1f5c37; color:var(--ok); } .badge.warn { background:#5a4a12; color:var(--warn); } .badge.bad { background:#5c2320; color:var(--bad); } .badge.info { background:#1f3f5c; color:var(--acc); }
+  .sev-critical { color:var(--bad); } .sev-high { color:#ffa657; } .sev-medium { color:var(--warn); } .sev-low { color:var(--ok); }
+  ol, ul { margin:4px 0 0 18px; padding:0; }
+  pre { background:#141517; border:1px solid var(--line); border-radius:4px; padding:8px; overflow:auto; font:11px/1.4 ui-monospace, Menlo, monospace; margin:6px 0 0; max-height:260px; }
+  .diff .add { color:var(--ok); } .diff .del { color:var(--bad); } .diff .hunk { color:var(--acc); }
+  .muted { color:var(--dim); }
+  .status { font-size:11px; color:var(--dim); }
+  a { color:var(--acc); }
+  .empty { padding:40px 20px; color:var(--dim); text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>REPRO</h1>
+  <span class="tag">witness → reconstruct → verify → act</span>
+  <span class="spacer"></span>
+  <span id="server" class="status">server: …</span>
+  <button class="secondary" id="reset">Reset demo</button>
+</header>
+<main>
+  <aside id="list"><div class="empty">Waiting for a failure…<br><span class="muted">Use the app. REPRO is watching.</span></div></aside>
+  <section id="detail"><div class="empty">Select an incident</div></section>
+</main>
+<script src="verify.js"></script>
+<script src="panel.js"></script>
+</body>
+</html>
