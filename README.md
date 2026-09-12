@@ -1,65 +1,115 @@
-# agent-hackathon
+# REPRO
 
-Team repo for a one-day global agent hackathon.
+> Most coding agents wait for you to describe the bug. REPRO was there when it happened.
 
-**Team:** [@isaiyahe](https://github.com/isaiyahe) · [@jeremiyahe](https://github.com/jeremiyahe)
+REPRO is a debugging agent that lives inside **Chrome DevTools**. It watches a web
+app fail, captures the clicks and requests that led to the failure, reconstructs
+reproduction steps, **proves the bug by replaying it**, files a GitHub issue,
+proposes a fix, **proves the fix by replaying again**, opens a pull request, and
+pings the team on Slack with the severity. A human approves every action.
 
-> **Project title, description, and demo go here on build day.**
+**The model never decides whether a bug reproduced or a fix worked. Replay does.**
 
----
+Built in one day for the global agent hackathon on 12 September 2026.
+Team: [@isaiyahe](https://github.com/isaiyahe) (backend, agent, contract),
+[@jeremiyahe](https://github.com/jeremiyahe) (extension), Aaliyah and Aiyana (submission, video, docs).
 
-## The challenge
+## The loop
 
-> Build an agent for a place people already work, talk, or live, then make it
-> meaningfully more useful because of that context.
-
-Full brief, rubric, schedule, and prizes: **[`docs/event/`](docs/event/)**
-
-| | |
-|---|---|
-| [The challenge & submission rules](docs/event/challenge.md) | What's being asked and what must be handed in |
-| [Schedule](docs/event/schedule.md) | 4h15m of build time, with checkpoints |
-| [Judging criteria](docs/event/judging-criteria.md) | Four criteria, full 1–5 rubric |
-| [Prizes](docs/event/prizes.md) | Global placings plus two sponsor categories |
-| [Submission checklist](docs/event/submission-checklist.md) | The five required deliverables |
-
-## Build eligibility — read before committing code
-
-The rules require the submitted project and **its core functionality** to be
-built during the official event window. Templates, libraries, and starter code
-are explicitly allowed; a pre-existing project is not.
-
-**Everything in this repo before build day is documentation only** — this
-README, the `docs/event/` folder, `.gitignore`, and `LICENSE`. No agent logic,
-no framework skeleton, no dependencies. The git history is the audit trail:
-the first code commit should be timestamped after the event's team-formation
-slot.
-
-When the project is done, add a short section here saying what was built during
-the event. The rules say teams should be prepared to explain this.
-
-## Stack
-
-Undecided until build day — the portal publishes a shared starter repository
-and sponsor resources beforehand, and we should see those first.
-
-Leaning toward **CopilotKit + OpenAI + Exa**: CopilotKit embeds agents directly
-into an existing app's UI, which lines up with the "agent in a place people
-already work" framing rather than bolting a sponsor on for its own sake, and it
-carries its own prize category. Confirm what **Ambiguous AI** provides on the
-day — there's a prize for it, but we don't yet know what the tooling is.
-
-## Getting set up on build day
-
-```bash
-git clone https://github.com/isaiyahe/agent-hackathon.git
-cd agent-hackathon
+```
+user hits a bug ─► REPRO witnesses it (clicks, failed request, runtime error)
+               ─► Analyze: OpenAI turns the evidence into steps + hypothesis + severity
+               ─► Verify: replay the recorded actions; deterministic signature match
+               ─► Create GitHub issue (after approval)
+               ─► Propose fix: agent returns one exact edit; allowlist + size cap enforced in code
+               ─► Apply & verify: replay again; "not reproduced" is the only thing that means fixed
+               ─► Open PR with before/after replay evidence (never merges)
+               ─► Notify: Slack/Telegram with severity, impact, and links
 ```
 
-Then decide the stack, scaffold it, and commit — in that order, in the repo,
-where the history shows it.
+Every hop has a failure state: OpenAI timeout falls back to a deterministic
+summary; GitHub failure returns the issue markdown for Copy/Retry; a rejected fix
+is reverted automatically; a disallowed edit is refused server-side.
+
+## Run it (3 terminals + Chrome)
+
+```bash
+# 1. the demo shop with a seeded guest-checkout 500
+cd apps/demo && npm install && npm run dev            # http://localhost:3000/checkout
+
+# 2. the REPRO server (OpenAI, GitHub, Slack keys live here, never in the browser)
+cd server && npm install && cp .env.example .env      # fill OPENAI_API_KEY, GITHUB_TOKEN, GITHUB_REPO
+npm run dev                                           # http://localhost:8787
+
+# 3. the DevTools panel (plain Manifest V3, no build step)
+#    chrome://extensions → Developer mode → Load unpacked → apps/panel
+#    open http://localhost:3000/checkout → F12 → "REPRO" tab
+```
+
+Then: Add demo item → Continue as guest → Checkout. The panel fills in. Click
+**Analyze → Verify by replay → Create GitHub issue → Propose fix → Apply & verify → Open PR → Notify team.**
+
+Automated proof of the whole loop in a real Chromium (needs the three services up):
+
+```bash
+cd apps/demo && npm run smoke      # sensor captures the bug → server intake
+cd apps/demo && npm run rehearse   # panel drives analyze → verify → issue → fix → PR → notify
+```
+
+## Where the browser is load-bearing
+
+- **Capture** uses the page itself: semantic click/input trail with `data-testid`
+  locators, failed fetch/XHR, runtime errors. A chatbox can't see any of that.
+- **Replay** runs in the inspected page via DevTools. The same recorded actions
+  are re-executed and the failure signature (endpoint, method, status, error) is
+  compared by a pure function, before the fix and after it.
+- **Two witnesses, one contract.** The DevTools panel watches the developer's
+  session; a one-line script tag (`apps/demo/public/repro.js`) watches real users
+  and posts the same `Incident` shape, so production failures show up in the
+  panel too.
+
+## Layout
+
+```
+packages/core/     Zod contract (Incident, IncidentAnalysis, ReplayOutcome), pure verifier, sanitizer, fixture
+apps/demo/         Express demo shop with the seeded bug, in-app sensor (repro.js), smoke + rehearsal tests
+apps/panel/        Chrome DevTools panel (MV3, plain JS)
+server/            Hono server: /incidents /analyze /issue /fix /fix/apply /fix/revert /fix/pr /notify
+supabase/          optional incident-history table migration (not enabled in the demo)
+docs/              event brief, judging rubric, team plan, handoff, slides
+```
+
+Issues and PRs created by the demo land in the public mirror
+[isaiyahe/repro-demo-shop](https://github.com/isaiyahe/repro-demo-shop).
+
+## Privacy and guardrails
+
+- Never sent anywhere: cookies, Authorization headers, password values, page HTML.
+  Sensitive fields are `[REDACTED]` at capture; the server sanitizes again.
+- The model returns structured output only (Zod-validated), retried once, then a
+  deterministic fallback.
+- The fix agent returns one exact snippet replacement in one allowlisted file. The
+  server rebuilds the diff, enforces the path allowlist and a 60-line cap, refuses
+  to apply if the file changed, and reverts on a failed re-verify.
+- A PR is only opened when replay said `reproduced` before and `not_reproduced` after.
+- Secrets stay in `server/.env`. `.env.example` lists what's needed.
+
+## What was built during the event
+
+Everything under `apps/`, `packages/`, `server/`, and `supabase/`, and all tests.
+Before the 11:00 team-formation slot the repo contained only documentation
+(`docs/event/`, this README's predecessor, `LICENSE`, `.gitignore`). The git
+history is the audit trail: the first code commit is timestamped after 1:00 pm.
+Libraries used as-is: WXT was planned and dropped for a plain MV3 panel, plus
+`@openai/agents`, `hono`, `octokit`, `zod`, `express`, `playwright`, `diff`.
+
+## What's next
+
+- Incident history in Supabase (migration written, off for the demo).
+- Sensor snippet as an npm package for any app; incidents from real users
+  appear in the developer's panel with replay on their local build.
+- Richer replay (navigation, scroll, timing) and cross-tab capture.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). Replace the copyright line with your legal names
-if you want it to be strictly correct.
+MIT. See [LICENSE](LICENSE). Stack notes and the rubric are in [`docs/`](docs/).
