@@ -29,11 +29,13 @@ app.get('/health', (c) => c.json({ status: 'ok' }));
 
 app.post('/api/checkout', async (c) => {
   const body: unknown = await c.req.json().catch(() => null);
-  const guest = typeof body === 'object' && body !== null ? (body as { guest?: unknown }).guest : undefined;
-  if (typeof guest !== 'boolean') {
-    return c.json({ error: 'Request body must be JSON with a boolean "guest" field', code: 'INVALID_REQUEST' }, 400);
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return c.json({ error: 'Request body must be a JSON object', code: 'INVALID_REQUEST' }, 400);
   }
 
+  // Only an explicit `"guest": false` checks out as the signed-in demo user. Anything else is a guest,
+  // including `{"guest": true}` and the demo app's `{"checkoutMode": "guest"}`.
+  const guest = (body as { guest?: unknown }).guest !== false;
   const user = resolveUser(guest);
   try {
     placeOrder(user);
