@@ -11,10 +11,10 @@ pings the team on Slack with the severity. A human approves every action.
 **The model never decides whether a bug reproduced or a fix worked. Replay does.**
 
 Built in one day for the global agent hackathon on 12 September 2026.
-Team: [@isaiyahe](https://github.com/isaiyahe) (backend, agent, contract),
-[@JeremiyahE](https://github.com/JeremiyahE) (extension),
-[@aaliyahescobedo13-svg](https://github.com/aaliyahescobedo13-svg) and
-[@jibekry](https://github.com/jibekry) (submission, video, docs).
+Team: Isaiyah [@isaiyahe](https://github.com/isaiyahe) (backend, agent, contract),
+Jeremiyah [@JeremiyahE](https://github.com/JeremiyahE) (DevTools extension),
+Aaliyah [@aaliyahescobedo13-svg](https://github.com/aaliyahescobedo13-svg) (slides, submission, video),
+Jibek [@jibekry](https://github.com/jibekry) (submission, video, docs).
 
 ## The loop
 
