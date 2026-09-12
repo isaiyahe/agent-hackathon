@@ -75,7 +75,7 @@ packages/core/     Zod contract (Incident, IncidentAnalysis, ReplayOutcome), pur
 apps/demo/         Express demo shop with the seeded bug, in-app sensor (repro.js), smoke + rehearsal tests
 apps/panel/        Chrome DevTools panel (MV3, plain JS)
 server/            Hono server: /incidents /analyze /issue /fix /fix/apply /fix/revert /fix/pr /notify
-supabase/          optional incident-history table migration (not enabled in the demo)
+supabase/          incident-history table migration (every incident is mirrored to Supabase)
 docs/              event brief, judging rubric, team plan, handoff, slides
 ```
 
@@ -92,7 +92,8 @@ used in the demo video; the branch is kept unmerged so both can be reviewed.
 ## Privacy and guardrails
 
 - Never sent anywhere: cookies, Authorization headers, password values, page HTML.
-  Sensitive fields are `[REDACTED]` at capture; the server sanitizes again.
+  Sensitive fields are `[REDACTED]` at capture; the server sanitizes again before
+  anything reaches OpenAI, GitHub, Slack, or Supabase.
 - The model returns structured output only (Zod-validated), retried once, then a
   deterministic fallback.
 - The fix agent returns one exact snippet replacement in one allowlisted file. The
@@ -112,7 +113,7 @@ Libraries used as-is: WXT was planned and dropped for a plain MV3 panel, plus
 
 ## What's next
 
-- Incident history in Supabase (migration written, off for the demo).
+- Incident history UI on top of the Supabase table (rows are already written).
 - Sensor snippet as an npm package for any app; incidents from real users
   appear in the developer's panel with replay on their local build.
 - Richer replay (navigation, scroll, timing) and cross-tab capture.
