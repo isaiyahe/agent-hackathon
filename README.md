@@ -18,7 +18,7 @@ Jibek [@jibekry](https://github.com/jibekry) (submission, video, docs).
 
 ## Demo video
 
-https://github.com/isaiyahe/agent-hackathon/raw/main/docs/REPRO-demo.mp4 (1:32, captioned)
+https://github.com/isaiyahe/agent-hackathon/raw/main/docs/REPRO-demo.mp4 (1:29, captioned)
 
 ## The loop
 
