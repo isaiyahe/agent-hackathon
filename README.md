@@ -16,6 +16,10 @@ Jeremiyah [@JeremiyahE](https://github.com/JeremiyahE) (DevTools extension),
 Aaliyah [@aaliyahescobedo13-svg](https://github.com/aaliyahescobedo13-svg) (slides, submission, video),
 Jibek [@jibekry](https://github.com/jibekry) (submission, video, docs).
 
+## Demo video
+
+https://github.com/isaiyahe/agent-hackathon/raw/main/docs/REPRO-demo.mp4 (1:32, captioned)
+
 ## The loop
 
 ```
