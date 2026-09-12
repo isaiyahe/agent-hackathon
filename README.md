@@ -12,7 +12,8 @@ pings the team on Slack with the severity. A human approves every action.
 
 Built in one day for the global agent hackathon on 12 September 2026.
 Team: [@isaiyahe](https://github.com/isaiyahe) (backend, agent, contract),
-[@jeremiyahe](https://github.com/jeremiyahe) (extension), Aaliyah and one more teammate (submission, video, docs).
+[@jeremiyahe](https://github.com/jeremiyahe) (extension),
+Aaliyah and [@jibekry](https://github.com/jibekry) (submission, video, docs).
 
 ## The loop
 
