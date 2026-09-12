@@ -22,5 +22,8 @@ create index if not exists incidents_created_at_idx on public.incidents (created
 create index if not exists incidents_signature_idx on public.incidents (endpoint, status);
 
 alter table public.incidents enable row level security;
-alter table public.incidents force row level security;
+-- (no "force": the server writes as service_role, which bypasses RLS by design)
 -- No policies on purpose: only the service/secret key (which bypasses RLS) touches this table.
+
+-- service_role bypasses RLS but still needs table privileges
+grant select, insert, update on public.incidents to service_role;
