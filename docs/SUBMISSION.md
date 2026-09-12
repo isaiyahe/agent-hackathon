@@ -82,8 +82,9 @@ as-is: `@openai/agents`, `hono`, `octokit`, `zod`, `express`, `playwright`,
 ## Team
 
 - [@isaiyahe](https://github.com/isaiyahe) — backend, agent, shared contract
-- [@jeremiyahe](https://github.com/jeremiyahe) — DevTools extension
-- Aaliyah and [@jibekry](https://github.com/jibekry) — submission, video, docs
+- [@JeremiyahE](https://github.com/JeremiyahE) — DevTools extension
+- [@aaliyahescobedo13-svg](https://github.com/aaliyahescobedo13-svg) — slides, submission, video
+- [@jibekry](https://github.com/jibekry) — submission, video, docs
 
 ## Links
 

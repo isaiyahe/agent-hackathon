@@ -12,8 +12,9 @@ pings the team on Slack with the severity. A human approves every action.
 
 Built in one day for the global agent hackathon on 12 September 2026.
 Team: [@isaiyahe](https://github.com/isaiyahe) (backend, agent, contract),
-[@jeremiyahe](https://github.com/jeremiyahe) (extension),
-Aaliyah and [@jibekry](https://github.com/jibekry) (submission, video, docs).
+[@JeremiyahE](https://github.com/JeremiyahE) (extension),
+[@aaliyahescobedo13-svg](https://github.com/aaliyahescobedo13-svg) and
+[@jibekry](https://github.com/jibekry) (submission, video, docs).
 
 ## The loop
 
@@ -87,7 +88,7 @@ Issues and PRs created by the demo land in the public mirror
 [isaiyahe/repro-demo-shop](https://github.com/isaiyahe/repro-demo-shop).
 
 A second, independent implementation of the same contract was built in parallel
-by [@jeremiyahe](https://github.com/jeremiyahe): a WXT + React DevTools extension
+by [@JeremiyahE](https://github.com/JeremiyahE): a WXT + React DevTools extension
 (`apps/extension`), its own agent server (`server/agent`, `server/demo`), and a
 React demo shop (`apps/demo-react`). It is merged on `main`; the demo video uses
 `apps/panel` + `apps/demo` + `server`.
