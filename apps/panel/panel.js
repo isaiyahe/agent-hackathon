@@ -7,7 +7,13 @@
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function ui(id) { return state.ui[id] || (state.ui[id] = { log: [] }); }
-  function log(id, m) { ui(id).log.unshift(new Date().toLocaleTimeString() + "  " + m); render(); }
+  var globalLog = [];
+  function log(id, m) {
+    var line = new Date().toLocaleTimeString() + "  " + m;
+    ui(id).log.unshift(line);
+    globalLog.unshift("[" + String(id).slice(-6) + "] " + line); if (globalLog.length > 60) globalLog.length = 60;
+    render();
+  }
   function api(path, body, method) {
     return fetch(SERVER + path, { method: method || (body ? "POST" : "GET"), headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined })
       .then(function (r) { return r.json().then(function (j) { j.__status = r.status; return j; }); });
@@ -155,12 +161,59 @@
 
   document.getElementById("reset").onclick = function () { fetch(DEMO + "/api/reset", { method: "POST" }).then(function () { $server.textContent = "server: connected · demo reset"; }).catch(function () {}); };
 
+  // ---------- console drawer ----------
+  var $console = document.getElementById("console"), consoleOpen = false;
+  function loadStatus() {
+    api("/status").then(function (j) {
+      var ints = j.integrations || {};
+      var rows = Object.keys(ints).map(function (k) {
+        var v = ints[k], extra = v.model ? " · " + v.model : v.repo ? " · " + v.repo : "";
+        return '<div class="kv"><span>' + esc(k) + esc(extra) + "</span>" + badge(v.configured ? "configured" : "off", v.configured ? "ok" : "warn") + "</div>";
+      });
+      rows.push('<div class="kv"><span>fix allowlist</span><span class="muted">' + esc((j.fix && j.fix.allowedDirs || []).join(", ")) + " · ≤" + esc(j.fix && j.fix.maxChangedLines) + " lines</span></div>");
+      rows.push('<div class="kv"><span>uptime</span><span class="muted">' + esc(j.uptimeSec) + "s · " + esc(j.incidentsStored) + " stored</span></div>");
+      document.getElementById("c-status").innerHTML = rows.join("");
+    }).catch(function (e) { document.getElementById("c-status").innerHTML = badge("server unreachable", "bad"); });
+  }
+  function renderConsole() {
+    if (!consoleOpen) return;
+    document.getElementById("c-log").textContent = globalLog.slice(0, 30).join("\n") || "—";
+    document.getElementById("c-count").textContent = state.rows.length + " incident(s) listed · selected: " + (state.selectedId || "none");
+  }
+  document.getElementById("toggle-console").onclick = function () {
+    consoleOpen = !consoleOpen;
+    $console.classList.toggle("open", consoleOpen);
+    document.querySelector("main").classList.toggle("with-console", consoleOpen);
+    if (consoleOpen) { document.getElementById("c-server").value = SERVER; document.getElementById("c-demo").value = DEMO; loadStatus(); renderConsole(); }
+  };
+  document.getElementById("c-save").onclick = function () {
+    SERVER = document.getElementById("c-server").value.replace(/\/$/, "") || SERVER;
+    DEMO = document.getElementById("c-demo").value.replace(/\/$/, "") || DEMO;
+    localStorage.setItem("repro.server", SERVER); localStorage.setItem("repro.demo", DEMO);
+    state.rows = []; state.selectedId = null; poll(); loadStatus(); log("console", "Reconnected to " + SERVER + " (app: " + DEMO + ")");
+  };
+  document.getElementById("c-test").onclick = function () {
+    var out = document.getElementById("c-test-out"); out.textContent = "testing…";
+    Promise.all([api("/health").then(function () { return "server ok"; }, function () { return "server FAIL"; }),
+      fetch(DEMO + "/api/state").then(function (r) { return r.ok ? "app ok" : "app " + r.status; }, function () { return "app FAIL"; })])
+      .then(function (r) { out.textContent = r.join(" · "); });
+  };
+  document.getElementById("c-refresh").onclick = function () { poll(); loadStatus(); };
+  document.getElementById("c-dismiss").onclick = function () {
+    if (!state.selectedId) return;
+    api("/incidents/" + state.selectedId, null, "DELETE").then(function () { log("console", "Dismissed " + state.selectedId); state.selectedId = null; poll(); });
+  };
+  document.getElementById("c-clear").onclick = function () {
+    api("/incidents", null, "DELETE").then(function (j) { log("console", "Cleared " + j.removed + " incident(s)"); state.rows = []; state.selectedId = null; render(); poll(); });
+  };
+
   // ---------- render ----------
   function badge(text, cls) { return '<span class="badge ' + (cls || "") + '">' + esc(text) + "</span>"; }
   function outcomeBadge(o) { return !o ? "" : o === "running" ? badge("replaying…", "info") : o === "reproduced" ? badge("reproduced", "bad") : o === "not_reproduced" ? badge("not reproduced", "ok") : o === "diverged" ? badge("diverged", "warn") : badge("inconclusive", "warn"); }
   function diffHtml(d) { return d.split("\n").map(function (l) { var c = l[0] === "+" ? "add" : l[0] === "-" ? "del" : l[0] === "@" ? "hunk" : ""; return '<span class="' + c + '">' + esc(l) + "</span>"; }).join("\n"); }
 
   function render() {
+    renderConsole();
     // sidebar
     if (!state.rows.length) $list.innerHTML = '<div class="empty">Waiting for a failure…<br><span class="muted">Use the app. REPRO is watching.</span></div>';
     else $list.innerHTML = state.rows.map(function (r) {

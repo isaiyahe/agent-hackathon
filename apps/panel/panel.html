@@ -42,6 +42,14 @@
   .status { font-size:11px; color:var(--dim); }
   a { color:var(--acc); }
   .empty { padding:40px 20px; color:var(--dim); text-align:center; }
+  #console { display:none; border-bottom:1px solid var(--line); background:#202226; padding:10px 12px; }
+  #console.open { display:block; }
+  #console .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
+  #console h3 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim); margin:0 0 6px; }
+  #console input { width:100%; background:#141517; color:var(--fg); border:1px solid var(--line); border-radius:4px; padding:5px 7px; font:inherit; margin-bottom:6px; }
+  #console .kv { display:flex; justify-content:space-between; gap:8px; padding:2px 0; border-bottom:1px dotted var(--line); }
+  #console pre { max-height:120px; }
+  main.with-console { height:auto; min-height:0; }
 </style>
 </head>
 <body>
@@ -51,7 +59,23 @@
   <span class="spacer"></span>
   <span id="server" class="status">server: …</span>
   <button class="secondary" id="reset">Reset demo</button>
+  <button class="secondary" id="toggle-console">Console</button>
 </header>
+<div id="console">
+  <div class="grid">
+    <div class="card" style="margin:0"><h3>Status</h3><div id="c-status" class="muted">…</div></div>
+    <div class="card" style="margin:0"><h3>Connection</h3>
+      <label class="muted">REPRO server</label><input id="c-server" spellcheck="false">
+      <label class="muted">App under test</label><input id="c-demo" spellcheck="false">
+      <div class="row"><button id="c-save">Save &amp; reconnect</button><button class="secondary" id="c-test">Test</button><span id="c-test-out" class="status"></span></div>
+    </div>
+    <div class="card" style="margin:0"><h3>Incidents</h3>
+      <div class="row"><button class="secondary" id="c-refresh">Refresh</button><button class="secondary" id="c-dismiss">Dismiss selected</button><button class="secondary" id="c-clear">Clear all</button></div>
+      <div class="muted" style="margin-top:6px" id="c-count"></div>
+    </div>
+    <div class="card" style="margin:0"><h3>Console log</h3><pre id="c-log">—</pre></div>
+  </div>
+</div>
 <main>
   <aside id="list"><div class="empty">Waiting for a failure…<br><span class="muted">Use the app. REPRO is watching.</span></div></aside>
   <section id="detail"><div class="empty">Select an incident</div></section>

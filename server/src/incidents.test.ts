@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { getIncident, incidents, ingestIncident, listIncidents, supabasePersist, updateIncident } from "./incidents.ts";
+import { clearIncidents, getIncident, incidents, ingestIncident, listIncidents, removeIncident, supabasePersist, updateIncident } from "./incidents.ts";
 import fixture from "../../packages/core/fixtures/incident.json";
 
 const noPersist = { persist: async () => {}, log: () => {} };
@@ -22,6 +22,15 @@ describe("ingestIncident", () => {
     await new Promise((r) => setTimeout(r, 0));
     expect(logs[0]).toContain("db down");
     expect(incidents.length).toBe(1);
+  });
+  it("removes one and clears all", () => {
+    ingestIncident({ ...fixture, id: "a" }, noPersist);
+    ingestIncident({ ...fixture, id: "b" }, noPersist);
+    expect(removeIncident("a")).toBe(true);
+    expect(removeIncident("a")).toBe(false);
+    expect(listIncidents().map((r) => r.incident.id)).toEqual(["b"]);
+    expect(clearIncidents()).toBe(1);
+    expect(incidents.length).toBe(0);
   });
   it("updates a stored row", () => {
     ingestIncident(fixture, noPersist);

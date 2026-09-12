@@ -61,6 +61,19 @@ export function updateIncident(id: string, rawPatch: unknown): StoredIncident | 
   return row;
 }
 
+export function removeIncident(id: string): boolean {
+  const i = incidents.findIndex((r) => r.incident.id === id);
+  if (i === -1) return false;
+  incidents.splice(i, 1);
+  return true;
+}
+
+export function clearIncidents(): number {
+  const n = incidents.length;
+  incidents.length = 0;
+  return n;
+}
+
 export function listIncidents(limit = 50): StoredIncident[] {
   return incidents.slice(0, limit);
 }

@@ -6,12 +6,32 @@ import { createIssue } from "./github.ts";
 import { applyFix, proposeFix, revertFix } from "./fix.ts";
 import { notify } from "./notify.ts";
 import { openFixPr } from "./pr.ts";
-import { getIncident, ingestIncident, listIncidents, updateIncident } from "./incidents.ts";
+import { clearIncidents, getIncident, incidents, ingestIncident, listIncidents, removeIncident, updateIncident } from "./incidents.ts";
 
 const app = new Hono();
 app.use("*", cors());
 
 app.get("/health", (c) => c.json({ ok: true }));
+
+/** What is wired up. Never returns secret values, only whether they are set. */
+app.get("/status", (c) => {
+  const e = process.env;
+  const set = (v?: string) => !!v && !v.includes("...");
+  return c.json({
+    ok: true,
+    version: "0.1.0",
+    uptimeSec: Math.round(process.uptime()),
+    incidentsStored: incidents.length,
+    integrations: {
+      openai: { configured: set(e.OPENAI_API_KEY), model: e.OPENAI_MODEL ?? "gpt-4.1-mini" },
+      github: { configured: set(e.GITHUB_TOKEN) && set(e.GITHUB_REPO), repo: e.GITHUB_REPO ?? null },
+      slack: { configured: set(e.SLACK_WEBHOOK_URL) },
+      telegram: { configured: set(e.TELEGRAM_BOT_TOKEN) && set(e.TELEGRAM_CHAT_ID) },
+      supabase: { configured: set(e.SUPABASE_URL) && set(e.SUPABASE_SECRET_KEY) },
+    },
+    fix: { allowedDirs: ["apps/demo/server"], maxChangedLines: 60 },
+  });
+});
 
 // ---- Intake: the in-app script tag (or the extension) posts incidents here ----
 app.post("/incidents", async (c) => {
@@ -32,6 +52,9 @@ app.get("/incidents/:id", (c) => {
   const row = getIncident(c.req.param("id"));
   return row ? c.json(row) : c.json({ ok: false, reason: "not found" }, 404);
 });
+app.delete("/incidents", (c) => c.json({ ok: true, removed: clearIncidents() }));
+app.delete("/incidents/:id", (c) => (removeIncident(c.req.param("id")) ? c.json({ ok: true }) : c.json({ ok: false, reason: "not found" }, 404)));
+
 app.patch("/incidents/:id", async (c) => {
   const patch = await c.req.json().catch(() => ({}));
   try {
