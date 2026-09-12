@@ -1,0 +1,8 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  // test/ runs under `node --test` (Node's own TypeScript support) and imports node:* modules.
+  "exclude": ["**/node_modules", ".output", "test"]
+}

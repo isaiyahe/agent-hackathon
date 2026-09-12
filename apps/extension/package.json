@@ -1,0 +1,28 @@
+{
+  "name": "repro-extension",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "REPRO — Chrome DevTools panel that witnesses, reconstructs, and verifies web failures",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "panel": "vite --config vite.panel.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/capture.test.ts",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "@wxt-dev/module-react": "^1.2.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "wxt": "^0.21.4"
+  }
+}
