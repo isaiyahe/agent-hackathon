@@ -1,6 +1,6 @@
-import { Incident } from "../../packages/core/schemas.ts";
+import { z } from "zod";
+import { Incident, IncidentAnalysis, ReplayOutcome } from "../../packages/core/schemas.ts";
 import { sanitizeIncident } from "../../packages/core/sanitize.ts";
-import type { IncidentAnalysis, ReplayOutcome } from "../../packages/core/schemas.ts";
 
 export const MAX_STORED = 200;
 
@@ -36,10 +36,28 @@ export function ingestIncident(input: unknown, opts: IngestOptions = {}): Stored
   return row;
 }
 
-export function updateIncident(id: string, patch: Partial<Omit<StoredIncident, "incident" | "receivedAt">>): StoredIncident | undefined {
+/** Only these fields may be patched; anything else (incident, source, receivedAt, __proto__) is rejected. */
+export const IncidentPatch = z
+  .object({
+    analysis: IncidentAnalysis.optional(),
+    analysisSource: z.enum(["model", "fallback"]).optional(),
+    replayOutcome: ReplayOutcome.optional(),
+    issueUrl: z.string().url().optional(),
+    prUrl: z.string().url().optional(),
+  })
+  .strict();
+export type IncidentPatch = z.infer<typeof IncidentPatch>;
+
+/** Throws ZodError on an invalid or non-whitelisted patch. */
+export function updateIncident(id: string, rawPatch: unknown): StoredIncident | undefined {
+  const patch = IncidentPatch.parse(rawPatch);
   const row = incidents.find((r) => r.incident.id === id);
   if (!row) return undefined;
-  Object.assign(row, patch);
+  if (patch.analysis !== undefined) row.analysis = patch.analysis;
+  if (patch.analysisSource !== undefined) row.analysisSource = patch.analysisSource;
+  if (patch.replayOutcome !== undefined) row.replayOutcome = patch.replayOutcome;
+  if (patch.issueUrl !== undefined) row.issueUrl = patch.issueUrl;
+  if (patch.prUrl !== undefined) row.prUrl = patch.prUrl;
   return row;
 }
 

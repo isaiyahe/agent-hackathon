@@ -28,6 +28,15 @@ describe("ingestIncident", () => {
     expect(updateIncident(fixture.id, { replayOutcome: "reproduced", issueUrl: "https://x/1" })!.issueUrl).toBe("https://x/1");
     expect(updateIncident("nope", {})).toBeUndefined();
   });
+  it("rejects patches that touch anything outside the whitelist", () => {
+    ingestIncident(fixture, noPersist);
+    expect(() => updateIncident(fixture.id, { incident: { id: "evil" } })).toThrow();
+    expect(() => updateIncident(fixture.id, { source: "extension" })).toThrow();
+    expect(() => updateIncident(fixture.id, JSON.parse('{"__proto__":{"polluted":true}}'))).toThrow();
+    expect(() => updateIncident(fixture.id, { issueUrl: "not a url" })).toThrow();
+    expect(({} as any).polluted).toBeUndefined();
+    expect(getIncident(fixture.id)!.incident.id).toBe(fixture.id);
+  });
 });
 
 describe("supabasePersist", () => {

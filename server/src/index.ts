@@ -34,8 +34,15 @@ app.get("/incidents/:id", (c) => {
 });
 app.patch("/incidents/:id", async (c) => {
   const patch = await c.req.json().catch(() => ({}));
-  const row = updateIncident(c.req.param("id"), patch);
-  return row ? c.json(row) : c.json({ ok: false, reason: "not found" }, 404);
+  try {
+    const row = updateIncident(c.req.param("id"), patch);
+    return row ? c.json(row) : c.json({ ok: false, reason: "not found" }, 404);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return c.json({ ok: false, reason: "invalid patch", issues: (err as any).issues }, 400);
+    }
+    throw err;
+  }
 });
 
 app.post("/analyze", async (c) => {
