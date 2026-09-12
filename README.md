@@ -73,7 +73,10 @@ cd apps/demo && npm run rehearse   # panel drives analyze → verify → issue �
 ```
 packages/core/     Zod contract (Incident, IncidentAnalysis, ReplayOutcome), pure verifier, sanitizer, fixture
 apps/demo/         Express demo shop with the seeded bug, in-app sensor (repro.js), smoke + rehearsal tests
-apps/panel/        Chrome DevTools panel (MV3, plain JS)
+apps/panel/        Chrome DevTools panel (MV3, plain JS) — used in the video
+apps/extension/    WXT + React DevTools extension (parallel implementation)
+apps/demo-react/   React demo shop for the WXT extension
+server/agent/, server/demo/   agent server + demo harness for the WXT extension
 server/            Hono server + management dashboard (/): /stats /incidents /analyze /issue /fix /fix/apply /fix/revert /fix/pr /notify
 supabase/          incident-history table migration (every incident is mirrored to Supabase)
 docs/              event brief, judging rubric, team plan, handoff, slides
@@ -82,12 +85,11 @@ docs/              event brief, judging rubric, team plan, handoff, slides
 Issues and PRs created by the demo land in the public mirror
 [isaiyahe/repro-demo-shop](https://github.com/isaiyahe/repro-demo-shop).
 
-A second, independent implementation of the same contract, a WXT + React
-DevTools extension with its own agent server, was built in parallel by
-[@jeremiyahe](https://github.com/jeremiyahe) on branch
-[`feat/repro-integration`](https://github.com/isaiyahe/agent-hackathon/tree/feat/repro-integration)
-(`apps/extension`, `server/agent`, `server/demo`). `main` carries the version
-used in the demo video; the branch is kept unmerged so both can be reviewed.
+A second, independent implementation of the same contract was built in parallel
+by [@jeremiyahe](https://github.com/jeremiyahe): a WXT + React DevTools extension
+(`apps/extension`), its own agent server (`server/agent`, `server/demo`), and a
+React demo shop (`apps/demo-react`). It is merged on `main`; the demo video uses
+`apps/panel` + `apps/demo` + `server`.
 
 ## Privacy and guardrails
 
