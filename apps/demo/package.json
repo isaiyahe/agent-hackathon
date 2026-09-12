@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch server/index.js",
-    "smoke": "node smoke.mjs"
+    "smoke": "node smoke.mjs",
+    "rehearse": "node panel-rehearsal.mjs"
   },
   "dependencies": {
     "express": "^4.21.2"
