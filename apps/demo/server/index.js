@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "..", "public")));
+app.use(express.static(path.join(__dirname, "..", "public"), { index: false }));
 
 const CATALOG = [
   { sku: "demo-item", name: "Demo item", price: 19, blurb: "One of these is all it takes to reach checkout.", tint: "#e9efe9" },
