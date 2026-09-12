@@ -1,6 +1,6 @@
 import type { ActionEvent, Incident, IncidentAnalysis, VerificationResult } from './types';
 
-// Mock data for the guest-checkout demo bug. Replace with real capture output.
+// Mock data for the guest-checkout demo bug, used only by the ?mock=1 preview (MockApp).
 
 export function createMockActions(start = Date.now() - 9_000): ActionEvent[] {
   return [
@@ -32,12 +32,13 @@ export function createMockIncident(actions = createMockActions()): Incident {
   const lastAction = actions[actions.length - 1]?.timestamp ?? Date.now();
   return {
     id: 'inc-001',
-    url: 'http://localhost:5173/checkout',
-    detectedAt: lastAction + 260,
+    timestamp: lastAction + 260,
+    page: { url: 'http://localhost:5173/checkout', title: 'Checkout · REPRO Demo Store' },
     actions,
     network: {
       method: 'POST',
       endpoint: '/api/checkout',
+      url: 'http://localhost:3001/api/checkout',
       status: 500,
       statusText: 'Internal Server Error',
       timestamp: lastAction + 240,

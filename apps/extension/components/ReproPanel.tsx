@@ -147,8 +147,8 @@ function PanelContent(props: ReproPanelProps) {
 function FailureView({ incident, analyzing, notice, onAnalyze }: ReproPanelProps & { incident: Incident }) {
   const meta = [
     `Incident ${incident.id}`,
-    incident.url && pathOf(incident.url),
-    incident.detectedAt !== undefined && formatTime(incident.detectedAt),
+    incident.page.url && pathOf(incident.page.url),
+    formatTime(incident.timestamp),
   ].filter(Boolean);
 
   return (

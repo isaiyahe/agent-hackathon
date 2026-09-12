@@ -9,6 +9,7 @@
     "build": "wxt build",
     "panel": "vite --config vite.panel.config.ts",
     "typecheck": "tsc --noEmit",
+    "test": "node --test test/capture.test.ts",
     "postinstall": "wxt prepare"
   },
   "dependencies": {

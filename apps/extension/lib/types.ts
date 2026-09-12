@@ -27,6 +27,8 @@ export type ActionEvent = {
 export type NetworkFailure = {
   method: string;
   endpoint: string;
+  /** Request URL without query string or fragment, e.g. http://localhost:3001/api/checkout */
+  url?: string;
   status: number;
   statusText?: string;
   timestamp?: number;
@@ -39,11 +41,18 @@ export type RuntimeError = {
   timestamp?: number;
 };
 
+export type PageInfo = {
+  /** Without query string or fragment, e.g. http://localhost:5173/checkout */
+  url: string;
+  title: string;
+};
+
 export type Incident = {
   id: string;
-  /** Page the failure happened on, e.g. http://localhost:5173/checkout */
-  url?: string;
-  detectedAt?: number;
+  /** Epoch milliseconds when the failure was observed and the incident window frozen. */
+  timestamp: number;
+  /** Page the failure happened on. */
+  page: PageInfo;
   actions: ActionEvent[];
   network?: NetworkFailure;
   runtimeError?: RuntimeError;
