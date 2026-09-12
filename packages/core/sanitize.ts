@@ -1,4 +1,4 @@
-import { Incident } from "./schemas";
+import { Incident } from "./schemas.ts";
 
 export const REDACTED = "[REDACTED]";
 

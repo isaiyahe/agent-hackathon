@@ -1,4 +1,4 @@
-import type { FailedRequest, ReplayObservation, ReplayOutcome, RuntimeError } from "./schemas";
+import type { FailedRequest, ReplayObservation, ReplayOutcome, RuntimeError } from "./schemas.ts";
 
 /** Strip ids, query strings, and trailing slashes so /api/orders/123?x=1 -> /api/orders/:id */
 export function normalizeEndpoint(urlOrPath: string): string {
