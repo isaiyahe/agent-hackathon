@@ -43,3 +43,4 @@ scratch/
 # WXT extension build
 .output/
 .wxt/
+apps/demo/server/state.json

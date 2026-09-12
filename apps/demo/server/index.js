@@ -14,11 +14,21 @@ const CATALOG = [
   { sku: "wool-beanie", name: "Wool beanie", price: 24, blurb: "Merino, one size, three colors.", tint: "#f0e8ec" },
 ];
 
-// In-memory demo state. Reset with POST /api/reset (session only) or /api/reset?all=1.
-let state = freshState();
+// Demo state. Persisted to state.json so a restart (e.g. after REPRO applies a fix)
+// keeps the cart the user built. Reset with POST /api/reset (session only) or /api/reset?all=1.
+import fs from "node:fs";
+const STATE_FILE = path.join(__dirname, "state.json");
 function freshState() {
   return { cart: [], customer: null, orders: [] };
 }
+function loadState() {
+  try { return { ...freshState(), ...JSON.parse(fs.readFileSync(STATE_FILE, "utf8")) }; } catch { return freshState(); }
+}
+function saveState() {
+  try { fs.writeFileSync(STATE_FILE, JSON.stringify(state)); } catch {}
+}
+let state = loadState();
+app.use((_req, res, next) => { res.on("finish", saveState); next(); });
 
 const bootedAt = new Date().toISOString();
 app.get("/api/state", (_req, res) => res.json({ ...state, bootedAt }));
@@ -67,7 +77,7 @@ app.post("/api/checkout", (_req, res) => {
 
 function createOrder(s) {
   if (s.cart.length === 0) throw new Error("Cart is empty");
-  // Deterministic failure for guest checkout: s.customer is null.
+  // Fix: use guestEmail as customerId if customer is null (guest checkout)
   const customerId = s.customer.id; // TypeError: Cannot read properties of null (reading 'id')
   return { id: `ord_${Date.now()}`, customerId, items: s.cart };
 }
