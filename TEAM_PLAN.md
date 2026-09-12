@@ -204,6 +204,74 @@ present). The model never decides whether the bug reproduced.
 `packages/core/fixtures/incident.json` is the guest-checkout incident from
 `REPRO_BUILD.md`. The panel renders it before any capture code exists.
 
+## Data flow (one incident, start to finish)
+
+```text
+ [1] Demo shop (localhost:3000)          [2] REPRO extension (Chrome)             [3] REPRO server (localhost:8787)     [4] Outside
+ ──────────────────────────────          ────────────────────────────             ─────────────────────────────────     ───────────
+ user clicks Add item, Continue   ──►    capture.content.ts
+ as guest, types email, Checkout         rolling buffer: Action[] (last 20)
+                                         locator = data-testid, value masked
+                                         if field looks sensitive
+
+ POST /api/checkout → 500         ──►    background.ts + devtools network
+ throws TypeError                        onRequestFinished status>=400
+                                         → freeze buffer, build RawIncident
+                                         → sanitizeIncident() (core)
+                                                     │
+                                                     │ POST /analyze  {Incident}
+                                                     ▼
+                                                                                   sanitizeIncident() again
+                                                                                   OpenAI structured output ──►  [OpenAI]
+                                                                                   15s timeout, 1 retry,
+                                                                                   else fallbackAnalysis()
+                                                     ◄──────────────────────────── {analysis, source}
+                                         panel shows actions, failed request,
+                                         steps, hypothesis, source badge
+
+ user clicks Verify               ──►    replay/: click each Action.locator
+                                         in order on the live page
+ same 500 fires again             ──►    observe FailedRequest again
+                                         verify(target, observed) (core, pure)
+                                         → reproduced | not_reproduced |
+                                           diverged | inconclusive
+
+ user clicks Create Issue         ──►    POST /issue {incident, analysis, replay}
+                                                     ▼
+                                                                                   buildIssueMarkdown() (deterministic)
+                                                                                   Octokit issues.create ──────────►  [GitHub]
+                                                                                   fail → {ok:false, markdown}
+                                                     ◄──────────────────────────── {ok, url | markdown}
+                                         panel: link to issue, or
+                                         Retry / Copy Markdown
+                                                                                   (optional) insert row ──────────►  [Supabase]
+                                                                                   fire-and-forget, never blocks
+
+ Stage 5 (gated): Fix ────────────►      POST /fix → diff → user Apply → POST /fix/apply → demo restarts
+                                         → Verify again → not_reproduced = fix verified, else /fix/revert
+```
+
+Rules of the flow:
+
+- Secrets never enter the extension. OpenAI, GitHub, and Supabase keys live in
+  `server/.env` only.
+- The model sees only a sanitized Incident and returns only an
+  IncidentAnalysis. It never sees the page, cookies, or headers.
+- The verdict (`reproduced` etc.) is computed in the extension by `verify()`.
+  The server and the model never set it.
+- Every network hop has a visible failure state in the panel.
+
+## Supabase (optional, after the 2:15 gate)
+
+Not a sponsor category, not in the demo script, so it is not part of the
+3:30 build. Prep is done so it can be added in ~10 minutes if the core is
+finished early: `supabase/migrations/0001_incidents.sql` creates an
+`incidents` table (RLS on, no policies, server-only). To enable, paste that
+file into the Supabase SQL editor, fill `SUPABASE_URL` and
+`SUPABASE_SECRET_KEY` in `server/.env`, and the server records each incident
+after `/issue` as a fire-and-forget insert. If it fails, nothing in the demo
+changes.
+
 ## Run it
 
 ```bash
