@@ -96,10 +96,11 @@ file and `REPRO_BUILD.md` in as context and ask it to draft. Two rules:
 
 Do these now, in this order:
 
-1. Create a **public** GitHub repo for issues to land in (e.g. `repro-demo-target`)
-   and a GitHub personal access token with `repo` scope. Hand the token to
-   Isaiyah privately. **Never paste it into chat, a commit, or a doc.**
-2. Get the OpenAI key from the sponsor portal. Same handling.
+1. ~~Create a public GitHub repo for issues and a token~~ **Done.** Issues
+   land in https://github.com/isaiyahe/repro-demo-shop (a public mirror of
+   `apps/demo`). Server has the token. Still: **never paste a key into chat,
+   a commit, or a doc.**
+2. ~~Get the OpenAI key~~ **Done.** Server has it.
 3. Check the portal: exact submission deadline, every form field, which
    partners must be tagged in the social post, and what the Ambiguous AI and
    other sponsor prizes actually require.
@@ -187,8 +188,8 @@ export const ReplayOutcome = z.enum([
 
 | Method | Path | Body | Returns |
 |---|---|---|---|
-| POST | `/analyze` | `Incident` | `{ analysis: IncidentAnalysis, source: "model" \| "fallback" }` |
-| POST | `/issue` | `{ incident, analysis, replay: { outcome, observed? } }` | `{ ok: true, url }` or `{ ok: false, markdown }` |
+| POST | `/analyze` | `Incident` | `{ analysis: IncidentAnalysis, source: "model" \| "fallback" }` — **live, ~5s with model** |
+| POST | `/issue` | `{ incident, analysis, replay: { outcome, observed? } }` | `{ ok: true, url, number, markdown }` or `{ ok: false, reason, markdown }` (HTTP 502) |
 | GET | `/health` | | `{ ok: true }` |
 
 | POST | `/fix` | `{ incident, analysis }` | `{ ok: true, diff, files: string[], explanation }` or `{ ok: false, reason }` |
