@@ -2,6 +2,6 @@
   "name": "repro-demo",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "node server/index.js" },
+  "scripts": { "dev": "node --watch server/index.js" },
   "dependencies": { "express": "^4.21.2" }
 }

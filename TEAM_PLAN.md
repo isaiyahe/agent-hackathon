@@ -28,6 +28,9 @@ who does what, in what order, and the contract everyone codes against.
 5. Two visible failure states: OpenAI timeout still shows captured facts;
    GitHub failure offers **Copy Markdown**.
 
+**Stretch, gated at 2:15 (see "Stage 5: Fix" below):** an implementer agent
+patches the seeded bug, and the same replay verifier proves the fix.
+
 **Cut unless everything above works by 2:15:** runtime error capture,
 general-purpose replay, source lookup, fancy redaction, anything not in the
 demo script.
@@ -40,6 +43,7 @@ demo script.
 | 2:15 | Click replay is flaky | Verify re-sends the failing request via `inspectedWindow.eval` and compares endpoint + status |
 | 2:25 | OpenAI structured output is fighting you | Deterministic summary from the incident facts |
 | 2:30 | GitHub issue creation fails | Copy Markdown button is the demo |
+| 2:15 | Verify + Create Issue are **not both** working end to end | Fix stage is cut. It becomes the "what's next" line in the video. No exceptions. |
 
 ## Ownership
 
@@ -60,6 +64,9 @@ someone else's area, ask out loud.
 - Build the panel against `packages/core/fixtures/incident.json` first. Do not
   wait on the server.
 - Demo page markup: every interactive element gets a `data-testid`.
+- **After the 2:15 gate only:** Fix button (enabled only when Verify said
+  `reproduced`), diff view, Apply button, second Verify run with a
+  "fix verified" / "fix rejected" badge.
 
 ### Isaiyah — backend. Owns `server/`, `packages/core/`, and `apps/demo/server`
 
@@ -75,8 +82,17 @@ someone else's area, ask out loud.
 - `server/src/github.ts`: `POST /issue`, Octokit, returns issue URL. On
   failure returns the markdown so the panel can offer Copy.
 - `.env.example` with `OPENAI_API_KEY`, `GITHUB_TOKEN`, `GITHUB_REPO`.
+- **After the 2:15 gate only:** `server/src/fix.ts` (`POST /fix`,
+  `POST /fix/apply`, `POST /fix/revert`) per Stage 5 below.
 
 ### Sister + girlfriend — submission. Own `README.md`, `docs/`, the portal
+
+You both have Claude / Codex. Use it for everything on this list: paste this
+file and `REPRO_BUILD.md` in as context and ask it to draft. Two rules:
+
+- **Only commit `README.md` and files under `docs/`.** If the assistant offers
+  to change anything else, say no. That is how we avoid merge conflicts.
+- **Never paste an API key or token into the assistant, a commit, or a doc.**
 
 Do these now, in this order:
 
@@ -88,14 +104,21 @@ Do these now, in this order:
    partners must be tagged in the social post, and what the Ambiguous AI and
    other sponsor prizes actually require.
 4. Draft the project title, written description, and social post. Use the
-   pitch lines from `REPRO_BUILD.md` ("Demo script" and "Positioning").
-5. Set up screen recording (OBS or the built-in recorder) and do one test
+   pitch lines from `REPRO_BUILD.md` ("Demo script" and "Positioning"). Put
+   drafts in `docs/submission.md` so everyone can read them.
+5. Write the two-minute video script as a shot list with timestamps
+   (0–15 what it is, 15–30 the problem, 30–100 the live demo, 100–120 why the
+   browser matters and what's next). Save it to `docs/video-script.md`.
+6. Set up screen recording (OBS or the built-in recorder) and do one test
    recording so 3:00 is not the first time it runs.
-6. From 2:00: run the demo path as a user, over and over, and report anything
+7. From 2:00: run the demo path as a user, over and over, and report anything
    that breaks with the exact click that broke it.
-7. One of you is **timekeeper**. Call out 2:15, 2:40, 3:00, 3:15 loudly.
-8. At 3:15: update README with what was built during the event and how to run
-   it. Confirm the repo is public. Confirm no keys in `git log -p`.
+8. One of you is **timekeeper**. Call out 2:15, 2:40, 3:00, 3:15 loudly.
+9. At 3:15: draft the README rewrite with the assistant: what it is, how to
+   run it (three commands from the "Run it" section below), what environment
+   it lives in, and which parts were built during the event (answer: all
+   application code; only docs existed before 11:15). Confirm the repo is
+   public. Confirm no keys in `git log -p`.
 
 ## Git rules
 
@@ -168,6 +191,10 @@ export const ReplayOutcome = z.enum([
 | POST | `/issue` | `{ incident, analysis, replay: { outcome, observed? } }` | `{ ok: true, url }` or `{ ok: false, markdown }` |
 | GET | `/health` | | `{ ok: true }` |
 
+| POST | `/fix` | `{ incident, analysis }` | `{ ok: true, diff, files: string[], explanation }` or `{ ok: false, reason }` |
+| POST | `/fix/apply` | `{ diff }` | `{ ok: true }` (applies, restarts demo app) |
+| POST | `/fix/revert` | | `{ ok: true }` |
+
 Replay and verify run entirely in the extension. `verify(target, observed)`
 compares `endpoint` + `status` (+ normalized `runtimeError.message` if both
 present). The model never decides whether the bug reproduced.
@@ -176,6 +203,50 @@ present). The model never decides whether the bug reproduced.
 
 `packages/core/fixtures/incident.json` is the guest-checkout incident from
 `REPRO_BUILD.md`. The panel renders it before any capture code exists.
+
+## Run it
+
+```bash
+cd apps/demo && npm install && npm run dev        # http://localhost:3000/checkout
+cd server && npm install && cp .env.example .env && npm run dev   # http://localhost:8787
+cd apps/extension && npm install && npm run dev   # load .output/chrome-mv3 as unpacked
+```
+
+## Stage 5: Fix (stretch, gate 2:15)
+
+The loop becomes **witness → reconstruct → verify → fix → verify again.**
+The same deterministic verifier that proved the bug proves the fix. The model
+never gets to say "I fixed it"; replay returning `not_reproduced` says it.
+
+**Gate:** start only if Verify and Create Issue both work end to end at 2:15.
+Otherwise it is the "what's next" line in the video and nothing more.
+
+**Flow:**
+
+1. Panel: **Fix** button, enabled only when the last Verify was `reproduced`.
+2. `POST /fix`: an agent with **one tool**, `editFile(path, contents)`,
+   restricted to `apps/demo/server/**`. Input is the incident, the analysis,
+   and the current contents of the allowlisted files. Output is a unified diff
+   and a one-paragraph explanation. Nothing is written to disk.
+3. Panel shows the diff. User clicks **Apply**. Nothing is applied without
+   this click.
+4. `POST /fix/apply` writes the files and restarts the demo app
+   (`apps/demo` runs under `node --watch`, so a file write is enough).
+5. Panel re-runs the same replay. `not_reproduced` = **fix verified**.
+   Anything else = **fix rejected**, and the panel calls `POST /fix/revert`.
+
+**Guardrails (these are the criterion 3 points):**
+
+- Path allowlist enforced in `/fix/apply`, not just in the prompt.
+- Diff size cap (reject > 60 changed lines).
+- Explicit approval before apply. Automatic revert on failed re-verify.
+- Model timeout 30s; on timeout the panel shows "no fix proposed" and the
+  issue path still works.
+
+**Failure states:** agent proposes a diff touching a disallowed path →
+`{ ok: false, reason: "path not allowed" }`. Diff does not apply cleanly →
+revert, show "fix rejected". Re-verify is `diverged` → revert, show the new
+signature.
 
 ## Demo script (what the video shows)
 
@@ -186,6 +257,8 @@ present). The model never decides whether the bug reproduced.
 5. Click **Create GitHub Issue**. Open the issue.
 6. Show one failure state (kill the server, click Verify or Create Issue,
    show the fallback).
+7. **If Stage 5 shipped:** click **Fix**, show the diff, click **Apply**,
+   click **Verify** again, badge flips to **fix verified**.
 
 > "The model never decides whether the bug reproduced. Capture, replay,
 > signature matching, and issue creation are deterministic."
