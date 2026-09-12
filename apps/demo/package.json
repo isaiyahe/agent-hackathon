@@ -2,6 +2,14 @@
   "name": "repro-demo",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "node --watch server/index.js" },
-  "dependencies": { "express": "^4.21.2" }
+  "scripts": {
+    "dev": "node --watch server/index.js",
+    "smoke": "node smoke.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
 }

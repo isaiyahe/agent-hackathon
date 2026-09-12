@@ -6,11 +6,37 @@ import { createIssue } from "./github.ts";
 import { applyFix, proposeFix, revertFix } from "./fix.ts";
 import { notify } from "./notify.ts";
 import { openFixPr } from "./pr.ts";
+import { getIncident, ingestIncident, listIncidents, updateIncident } from "./incidents.ts";
 
 const app = new Hono();
 app.use("*", cors());
 
 app.get("/health", (c) => c.json({ ok: true }));
+
+// ---- Intake: the in-app script tag (or the extension) posts incidents here ----
+app.post("/incidents", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  try {
+    const source = c.req.header("x-repro-source") === "extension" ? "extension" : "sdk";
+    const row = ingestIncident(body, { source });
+    return c.json({ ok: true, id: row.incident.id, receivedAt: row.receivedAt }, 201);
+  } catch (err) {
+    if (err instanceof Error && err.name === "ZodError") {
+      return c.json({ ok: false, reason: "invalid incident", issues: (err as any).issues }, 400);
+    }
+    throw err;
+  }
+});
+app.get("/incidents", (c) => c.json({ incidents: listIncidents(Number(c.req.query("limit") ?? 50)) }));
+app.get("/incidents/:id", (c) => {
+  const row = getIncident(c.req.param("id"));
+  return row ? c.json(row) : c.json({ ok: false, reason: "not found" }, 404);
+});
+app.patch("/incidents/:id", async (c) => {
+  const patch = await c.req.json().catch(() => ({}));
+  const row = updateIncident(c.req.param("id"), patch);
+  return row ? c.json(row) : c.json({ ok: false, reason: "not found" }, 404);
+});
 
 app.post("/analyze", async (c) => {
   const body = await c.req.json().catch(() => null);

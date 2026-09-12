@@ -193,6 +193,10 @@ export const ReplayOutcome = z.enum([
 | POST | `/analyze` | `Incident` | `{ analysis: IncidentAnalysis, source: "model" \| "fallback" }` — **live, ~5s with model** |
 | POST | `/issue` | `{ incident, analysis, replay: { outcome, observed? } }` | `{ ok: true, url, number, markdown }` or `{ ok: false, reason, markdown }` (HTTP 502) |
 | GET | `/health` | | `{ ok: true }` |
+| POST | `/incidents` | `Incident` (from `repro.js` or the extension; header `x-repro-source: extension` to tag it) | `201 { ok, id, receivedAt }`. Stored newest-first, deduped by id, mirrored to Supabase if configured |
+| GET | `/incidents?limit=50` | | `{ incidents: [{ incident, source, receivedAt, analysis?, replayOutcome?, issueUrl?, prUrl? }] }` — **panel lists these** |
+| GET | `/incidents/:id` | | one row, or 404 |
+| PATCH | `/incidents/:id` | `{ analysis?, replayOutcome?, issueUrl?, prUrl? }` | updated row. Panel calls this after each stage so the list shows progress |
 | POST | `/notify` | `{ incident, analysis, replay: { outcome }, issueUrl?, fix?: { status: "verified" \| "rejected" \| "proposed" \| "not_attempted", prUrl? } }` | `{ ok, configured, sent: string[], failed: [...], message }`. `configured:false` when no Slack/Telegram env is set; panel shows the message anyway |
 
 | POST | `/fix` | `{ incident, analysis }` | `{ ok: true, proposalId, path, diff, changedLines, explanation }` or `{ ok: false, reason }` (422) — **live** |
@@ -265,6 +269,25 @@ Rules of the flow:
 - The verdict (`reproduced` etc.) is computed in the extension by `verify()`.
   The server and the model never set it.
 - Every network hop has a visible failure state in the panel.
+
+## In-app sensor: `apps/demo/public/repro.js`
+
+Answers "what if the user doesn't have the extension?" One script tag in
+any web app produces the same Incident the extension does:
+
+```html
+<script src="/repro.js" data-endpoint="http://localhost:8787/incidents"></script>
+```
+
+It keeps the last 20 semantic actions (label text over placeholder, password
+and card-like fields `[REDACTED]`), wraps `fetch` and XHR to catch status
+>= 400, attaches a runtime error seen within 3s, dedupes per endpoint for 5s,
+and posts with `keepalive`. It never sends cookies, headers, page HTML, or
+password values, and never throws into the host app.
+
+Proof: `cd apps/demo && npm run smoke` drives real Chromium through the
+checkout bug and asserts the server received the incident with the click
+trail, the redacted password, and the runtime error. Run it before the video.
 
 ## Supabase (optional, after the 2:15 gate)
 
