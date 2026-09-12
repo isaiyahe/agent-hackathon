@@ -1,0 +1,22 @@
+{
+  "id": "inc_demo_guest_checkout",
+  "capturedAt": "2026-09-12T13:20:00.000Z",
+  "page": { "url": "http://localhost:3000/checkout", "title": "Demo Shop — Checkout" },
+  "actions": [
+    { "t": 0, "kind": "navigate", "locator": "/checkout", "label": "Open /checkout" },
+    { "t": 1200, "kind": "click", "locator": "add-item", "label": "Click Add demo item" },
+    { "t": 2400, "kind": "click", "locator": "continue-guest", "label": "Click Continue as guest" },
+    { "t": 3100, "kind": "input", "locator": "email", "label": "Type email", "value": "guest@example.com" },
+    { "t": 4000, "kind": "click", "locator": "checkout", "label": "Click Checkout" }
+  ],
+  "failedRequest": {
+    "method": "POST",
+    "url": "http://localhost:3000/api/checkout",
+    "endpoint": "/api/checkout",
+    "status": 500
+  },
+  "runtimeError": {
+    "message": "Cannot read properties of null (reading 'id')",
+    "stack": "TypeError: Cannot read properties of null (reading 'id')\n    at createOrder (server/index.js:41:32)"
+  }
+}

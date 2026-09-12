@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Demo Shop — Checkout</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 520px; margin: 40px auto; padding: 0 16px; }
+    button { padding: 8px 14px; margin: 4px 4px 4px 0; }
+    input { padding: 8px; }
+    #log { white-space: pre-wrap; background: #f4f4f4; padding: 12px; min-height: 60px; }
+    .err { color: #b00020; }
+  </style>
+</head>
+<body>
+  <h1>Demo Shop</h1>
+  <p>Cart: <span data-testid="cart-count" id="cart-count">0</span> item(s)</p>
+
+  <button data-testid="add-item" id="add-item">Add demo item</button>
+  <button data-testid="continue-guest" id="continue-guest">Continue as guest</button>
+  <label>Email <input data-testid="email" id="email" type="email" placeholder="guest@example.com" /></label>
+  <label>Password <input data-testid="password" id="password" type="password" placeholder="(never captured)" /></label>
+  <br />
+  <button data-testid="checkout" id="checkout">Checkout</button>
+  <button data-testid="reset" id="reset">Reset demo</button>
+
+  <h3>Log</h3>
+  <div id="log" data-testid="log"></div>
+
+  <script>
+    const log = (m, cls) => {
+      const el = document.getElementById("log");
+      el.innerHTML += `<div class="${cls ?? ""}">${m}</div>`;
+    };
+    const post = (url, body) =>
+      fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body ?? {}) });
+
+    document.getElementById("add-item").onclick = async () => {
+      const r = await post("/api/cart", { sku: "demo-item" });
+      const j = await r.json();
+      document.getElementById("cart-count").textContent = j.cart.length;
+      log("Added demo item");
+    };
+
+    document.getElementById("continue-guest").onclick = async () => {
+      await post("/api/session/guest", { email: document.getElementById("email").value });
+      log("Continuing as guest");
+    };
+
+    document.getElementById("checkout").onclick = async () => {
+      const r = await post("/api/checkout");
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        log(`Checkout failed: ${r.status} ${j.error ?? ""}`, "err");
+        // Surface the server error as a runtime error too, so REPRO can capture it.
+        throw new TypeError(j.error ?? "Checkout failed");
+      }
+      log(`Order ${j.order.id} placed`);
+    };
+
+    document.getElementById("reset").onclick = async () => {
+      await post("/api/reset");
+      document.getElementById("cart-count").textContent = "0";
+      document.getElementById("log").innerHTML = "";
+      log("Demo reset");
+    };
+  </script>
+</body>
+</html>

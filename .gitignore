@@ -39,3 +39,7 @@ Thumbs.db
 .cache/
 tmp/
 scratch/
+
+# WXT extension build
+.output/
+.wxt/
