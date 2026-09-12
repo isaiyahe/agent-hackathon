@@ -39,7 +39,7 @@ cd apps/demo && npm install && npm run dev            # http://localhost:3000/ch
 
 # 2. the REPRO server (OpenAI, GitHub, Slack keys live here, never in the browser)
 cd server && npm install && cp .env.example .env      # fill OPENAI_API_KEY, GITHUB_TOKEN, GITHUB_REPO
-npm run dev                                           # http://localhost:8787
+npm run dev                                           # http://localhost:8787  ← management dashboard: error rates, trend, every incident
 
 # 3. the DevTools panel (plain Manifest V3, no build step)
 #    chrome://extensions → Developer mode → Load unpacked → apps/panel
@@ -74,7 +74,7 @@ cd apps/demo && npm run rehearse   # panel drives analyze → verify → issue �
 packages/core/     Zod contract (Incident, IncidentAnalysis, ReplayOutcome), pure verifier, sanitizer, fixture
 apps/demo/         Express demo shop with the seeded bug, in-app sensor (repro.js), smoke + rehearsal tests
 apps/panel/        Chrome DevTools panel (MV3, plain JS)
-server/            Hono server: /incidents /analyze /issue /fix /fix/apply /fix/revert /fix/pr /notify
+server/            Hono server + management dashboard (/): /stats /incidents /analyze /issue /fix /fix/apply /fix/revert /fix/pr /notify
 supabase/          incident-history table migration (every incident is mirrored to Supabase)
 docs/              event brief, judging rubric, team plan, handoff, slides
 ```

@@ -6,17 +6,26 @@ import { createIssue } from "./github.ts";
 import { applyFix, proposeFix, revertFix } from "./fix.ts";
 import { notify } from "./notify.ts";
 import { openFixPr } from "./pr.ts";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { computeStats } from "./stats.ts";
 import { clearIncidents, getIncident, incidents, ingestIncident, listIncidents, removeIncident, updateIncident } from "./incidents.ts";
 
 const app = new Hono();
 app.use("*", cors());
 
-app.get("/", (c) =>
+const DASHBOARD = path.join(path.dirname(new URL(import.meta.url).pathname), "..", "public", "dashboard.html");
+app.get("/", (c) => c.html(readFileSync(DASHBOARD, "utf8")));
+app.get("/stats", (c) => c.json(computeStats()));
+
+app.get("/api", (c) =>
   c.json({
     name: "REPRO server",
     tagline: "A debugging agent that witnessed the failure and can prove it happens again.",
     docs: "https://github.com/isaiyahe/agent-hackathon",
     routes: {
+      "GET /": "management dashboard",
+      "GET /stats": "error rates, trend, breakdowns",
       "GET /health": "liveness",
       "GET /status": "which integrations are configured (no secrets)",
       "POST /incidents": "intake from the in-app sensor or the DevTools panel",
