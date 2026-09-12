@@ -82,6 +82,13 @@ docs/              event brief, judging rubric, team plan, handoff, slides
 Issues and PRs created by the demo land in the public mirror
 [isaiyahe/repro-demo-shop](https://github.com/isaiyahe/repro-demo-shop).
 
+A second, independent implementation of the same contract, a WXT + React
+DevTools extension with its own agent server, was built in parallel by
+[@jeremiyahe](https://github.com/jeremiyahe) on branch
+[`feat/repro-integration`](https://github.com/isaiyahe/agent-hackathon/tree/feat/repro-integration)
+(`apps/extension`, `server/agent`, `server/demo`). `main` carries the version
+used in the demo video; the branch is kept unmerged so both can be reviewed.
+
 ## Privacy and guardrails
 
 - Never sent anywhere: cookies, Authorization headers, password values, page HTML.
