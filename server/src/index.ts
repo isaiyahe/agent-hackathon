@@ -11,6 +11,24 @@ import { clearIncidents, getIncident, incidents, ingestIncident, listIncidents, 
 const app = new Hono();
 app.use("*", cors());
 
+app.get("/", (c) =>
+  c.json({
+    name: "REPRO server",
+    tagline: "A debugging agent that witnessed the failure and can prove it happens again.",
+    docs: "https://github.com/isaiyahe/agent-hackathon",
+    routes: {
+      "GET /health": "liveness",
+      "GET /status": "which integrations are configured (no secrets)",
+      "POST /incidents": "intake from the in-app sensor or the DevTools panel",
+      "GET /incidents": "list incidents (newest first)",
+      "POST /analyze": "Incident -> IncidentAnalysis via OpenAI (deterministic fallback)",
+      "POST /issue": "create a GitHub issue after user approval",
+      "POST /fix": "propose one exact edit; /fix/apply, /fix/revert, /fix/pr",
+      "POST /notify": "Slack / Telegram with severity and links",
+    },
+  }),
+);
+
 app.get("/health", (c) => c.json({ ok: true }));
 
 /** What is wired up. Never returns secret values, only whether they are set. */
