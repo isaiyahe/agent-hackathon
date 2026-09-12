@@ -161,7 +161,7 @@
       '<span class="muted">' + esc(i.page.title) + " · " + esc(new Date(i.capturedAt).toLocaleTimeString()) + "</span></div>" +
       (i.runtimeError ? '<pre>' + esc(i.runtimeError.message) + "</pre>" : "") +
       '<h2 style="margin-top:8px">Actions before the failure</h2><ol>' + i.actions.map(function (x) { return "<li>" + esc(x.label) + (x.value ? ' <span class="muted">= ' + esc(x.value) + "</span>" : "") + ' <span class="muted">[' + esc(x.locator) + "]</span></li>"; }).join("") + "</ol>" +
-      '<div class="row" style="margin-top:8px"><button id="b-analyze"' + b + ">" + (a ? "Re-analyze" : "Analyze") + '</button><button id="b-verify"' + b + ">Verify by replay</button>' + outcomeBadge(u.replay) + "</div></div>";
+      '<div class="row" style="margin-top:8px"><button id="b-analyze"' + b + ">" + (a ? "Re-analyze" : "Analyze") + '</button><button id="b-verify"' + b + ">Verify by replay</button>" + outcomeBadge(u.replay) + "</div></div>";
 
     if (a) {
       h += '<div class="card"><h2>Reconstructed ' + (u.source ? badge(u.source === "model" ? "OpenAI" : "deterministic fallback", u.source === "model" ? "info" : "warn") : "") + "</h2>" +
@@ -170,12 +170,12 @@
         "<h2 style=\"margin-top:8px\">Steps to reproduce</h2><ol>" + a.reproductionSteps.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") + "</ol>" +
         '<h2 style="margin-top:8px">Hypothesis (' + esc(a.confidence) + ")</h2><div>" + esc(a.hypothesis) + "</div>" +
         (a.evidenceGaps.length ? '<div class="muted" style="margin-top:4px">Gaps: ' + esc(a.evidenceGaps.join("; ")) + "</div>" : "") +
-        '<div class="row" style="margin-top:8px"><button id="b-issue"' + b + (u.replay === "reproduced" ? ' class="good"' : "") + ">Create GitHub issue</button>' +
+        '<div class="row" style="margin-top:8px"><button id="b-issue"' + b + (u.replay === "reproduced" ? ' class="good"' : "") + ">Create GitHub issue</button>" +
         (u.issue ? (u.issue.ok ? '<a href="' + esc(u.issue.url) + '" target="_blank">' + esc(u.issue.url) + "</a>" : badge("GitHub failed: " + u.issue.reason, "bad") + '<button id="b-copy" class="secondary">Copy Markdown</button><button id="b-issue-retry" class="secondary"' + b + ">Retry</button>") : "") +
         "</div></div>";
 
       h += '<div class="card"><h2>Fix (agent proposes, replay verifies, human merges)</h2><div class="row">' +
-        '<button id="b-fix"' + (u.replay === "reproduced" ? b : " disabled") + ">Propose fix</button>' +
+        '<button id="b-fix"' + (u.replay === "reproduced" ? b : " disabled") + ">Propose fix</button>" +
         (u.fix && u.fix.ok ? '<button id="b-apply"' + (u.fix.applied ? " disabled" : b) + ">Apply &amp; verify</button>" : "") +
         (u.fixVerified === true ? badge("fix verified by replay", "ok") : u.fixVerified === false ? badge("fix rejected, reverted", "bad") : "") +
         (u.fixVerified === true ? '<button id="b-pr"' + (u.pr && u.pr.ok ? " disabled" : b) + ">Open PR</button>" : "") +
@@ -183,7 +183,7 @@
         "</div>" + (u.replay !== "reproduced" && !u.fix ? '<div class="muted" style="margin-top:4px">Verify must say <em>reproduced</em> before a fix can be proposed.</div>' : "") +
         (u.fix ? (u.fix.ok ? '<div style="margin-top:6px">' + esc(u.fix.explanation) + '</div><pre class="diff">' + diffHtml(u.fix.diff) + "</pre>" : '<div class="muted" style="margin-top:6px">' + esc(u.fix.reason) + "</div>") : "") + "</div>";
 
-      h += '<div class="card"><h2>Notify</h2><div class="row"><button id="b-notify" class="secondary"' + b + ">Notify team</button>' +
+      h += '<div class="card"><h2>Notify</h2><div class="row"><button id="b-notify" class="secondary"' + b + ">Notify team</button>" +
         (u.notify ? (u.notify.configured ? (u.notify.ok ? badge("sent: " + u.notify.sent.join(", "), "ok") : badge("failed", "bad")) : badge("no channel configured", "warn")) : "") + "</div>" +
         (u.notify ? "<pre>" + esc(u.notify.message) + "</pre>" : "") + "</div>";
     }
